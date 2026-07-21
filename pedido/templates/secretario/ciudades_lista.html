@@ -1,0 +1,62 @@
+{% extends 'secretario/base_panel.html' %}
+{% load static %}
+{% load rutaexpres_tags %}
+
+{% block panel_contenido %}
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="fas fa-city text-primary"></i> Catálogo de Ciudades</h2>
+        <a href="{% url 'crear_ciudad' %}" class="btn btn-primary"><i class="fas fa-plus"></i> Registrar Ciudad</a>
+    </div>
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table id="tablaCiudades" class="table table-striped table-hover">
+                    <thead><tr><th>#</th><th>Nombre</th><th>Provincia</th><th>Tarifa Base</th><th>Estado</th><th>Acciones</th></tr></thead>
+                    <tbody>
+                    {% for ciudad in ciudades %}
+                    <tr>
+                        <td>{{ forloop.counter }}</td>
+                        <td>{{ ciudad.nombre }}</td>
+                        <td>{{ ciudad.provincia|default:'-' }}</td>
+                        <td>${{ ciudad.tarifa_base }}</td>
+                        <td>{% if ciudad.activa %}<span class="badge bg-success">Activa</span>{% else %}<span class="badge bg-danger">Inactiva</span>{% endif %}</td>
+                        <td>
+                            <a href="{% url 'editar_ciudad' ciudad.pk %}" class="btn btn-sm btn-warning"><i class="fas fa-edit"></i></a>
+                            <button class="btn btn-sm {% if ciudad.activa %}btn-danger{% else %}btn-success{% endif %}" onclick="toggleCiudad({{ ciudad.pk }}, '{{ ciudad.nombre }}', {{ ciudad.activa|yesno:'true,false' }})">
+                                <i class="fas {% if ciudad.activa %}fa-ban{% else %}fa-check{% endif %}"></i>
+                            </button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    $('#tablaCiudades').DataTable({ language: { url: 'https://cdn.datatables.net/plug-ins/1.13.7/i18n/es-ES.json' } });
+});
+function toggleCiudad(pk, nombre, activa) {
+    var accion = activa ? 'desactivar' : 'activar';
+    Swal.fire({
+        title: '¿' + accion.charAt(0).toUpperCase() + accion.slice(1) + ' ' + nombre + '?',
+        icon: 'warning', showCancelButton: true,
+        confirmButtonText: 'Sí, ' + accion, cancelButtonText: 'Cancelar'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            var form = document.createElement('form');
+            form.method = 'POST'; form.action = '/secretario/ciudades/' + pk + '/toggle/';
+            var csrf = document.createElement('input');
+            csrf.type = 'hidden'; csrf.name = 'csrfmiddlewaretoken'; csrf.value = '{{ csrf_token }}';
+            form.appendChild(csrf); document.body.appendChild(form); form.submit();
+        }
+    });
+}
+</script>
+{% endblock %}

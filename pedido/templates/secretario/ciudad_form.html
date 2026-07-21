@@ -1,0 +1,54 @@
+{% extends 'secretario/base_panel.html' %}
+{% load static %}
+{% load rutaexpres_tags %}
+
+{% block panel_contenido %}
+<div class="container-fluid py-4">
+    <h2 class="mb-4"><i class="fas fa-city text-primary"></i> {{ titulo }}</h2>
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <form id="formCiudad" method="POST" novalidate>
+                {% csrf_token %}
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Nombre *</label>
+                        {{ form.nombre }}
+                        {% if form.nombre.errors %}<div class="text-danger small">{{ form.nombre.errors.0 }}</div>{% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Provincia</label>
+                        {{ form.provincia }}
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Tarifa Base ($) *</label>
+                        {{ form.tarifa_base }}
+                        {% if form.tarifa_base.errors %}<div class="text-danger small">{{ form.tarifa_base.errors.0 }}</div>{% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-check mt-4">
+                            {{ form.activa }}
+                            <label class="form-check-label" for="id_activa">Ciudad Activa</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-4">
+                    <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Guardar</button>
+                    <a href="{% url 'listar_ciudades' %}" class="btn btn-secondary">Cancelar</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    $('#formCiudad').validate({
+        rules: { nombre: {required: true}, tarifa_base: {required: true, number: true, min: 0.01} },
+        messages: { nombre: 'El nombre es obligatorio', tarifa_base: {required: 'La tarifa es obligatoria', number: 'Ingrese un número válido', min: 'Debe ser mayor a 0'} },
+        errorClass: 'text-danger small', errorElement: 'div'
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,42 @@
+{% extends '../plantillaPrin.html' %}
+{% load static %}
+
+{% block page_title %}Rastreo de Envío{% endblock %}
+
+{% block contenido %}
+<div class="container-fluid py-5 bg-light" style="min-height: 70vh; display: flex; align-items: center;">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-8 col-xl-6 text-center">
+                <div class="wow fadeInUp" data-wow-delay="0.1s">
+                    <i class="fa fa-box-open fa-4x text-primary mb-4"></i>
+                    <h1 class="display-5 mb-3">Rastreo de Envío</h1>
+                    <p class="text-muted fs-5 mb-5">Ingrese su número de guía para consultar el estado actual de su encomienda</p>
+                </div>
+                
+                <div class="card border-0 shadow rounded p-4 p-md-5 wow fadeInUp" data-wow-delay="0.3s">
+                    {% if error %}
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        <i class="fa fa-exclamation-circle me-2"></i> {{ error }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                    {% endif %}
+                    
+                    <form action="{% url 'rastreo_publico' %}" method="POST">
+                        {% csrf_token %}
+                        <div class="input-group input-group-lg mb-4">
+                            <span class="input-group-text bg-white text-primary border-end-0">
+                                <i class="fa fa-search"></i>
+                            </span>
+                            <input type="text" name="numero_guia" class="form-control border-start-0 ps-0" placeholder="Ej: G-123456" required autocomplete="off">
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-lg w-100 rounded-pill shadow-sm">
+                            Consultar Estado
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

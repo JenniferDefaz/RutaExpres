@@ -1,0 +1,75 @@
+{% extends '../plantillaPrin.html' %}
+{% load static %}
+{% load rutaexpres_tags %}
+
+{% block page_title %}Mis Asignaciones{% endblock %}
+
+{% block contenido %}
+<div class="container-fluid py-5">
+    <div class="container">
+        <div class="row mb-4">
+            <div class="col-12 wow fadeInUp" data-wow-delay="0.1s">
+                <h2 class="mb-2">Mis Asignaciones</h2>
+                <p class="text-muted">Bienvenido, {{ user.get_full_name }}</p>
+            </div>
+        </div>
+
+        <div class="row wow fadeInUp" data-wow-delay="0.3s">
+            <div class="col-12">
+                <div class="card border-0 shadow-sm rounded">
+                    <div class="card-body p-4">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle w-100" id="asignacionesTable">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Guía</th>
+                                        <th>Remitente</th>
+                                        <th>Destinatario</th>
+                                        <th>Ciudad Destino</th>
+                                        <th>Estado</th>
+                                        <th>Fecha</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for encomienda in encomiendas %}
+                                    <tr>
+                                        <td class="fw-bold">{{ encomienda.numero_guia }}</td>
+                                        <td>{{ encomienda.cliente.usuario.get_full_name }}</td>
+                                        <td>{{ encomienda.nombre_destinatario }}</td>
+                                        <td>{{ encomienda.ciudad_destino.nombre }}</td>
+                                        <td>{{ encomienda.estado|badge_estado|safe }}</td>
+                                        <td>{{ encomienda.fecha_registro|date:'d/m/Y' }}</td>
+                                        <td>
+                                            <a href="{% url 'actualizar_estado_despachador' pk=encomienda.pk %}" class="btn btn-sm btn-primary">
+                                                <i class="fa fa-edit me-1"></i>Actualizar Estado
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    {% empty %}
+                                    <tr>
+                                        <td colspan="7" class="text-center py-4 text-muted">No tiene encomiendas asignadas.</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    $(document).ready(function() {
+        $('#asignacionesTable').DataTable({
+            language: {
+                url: '//cdn.datatables.net/plug-ins/1.13.4/i18n/es-ES.json',
+            }
+        });
+    });
+</script>
+{% endblock %}

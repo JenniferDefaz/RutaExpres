@@ -26,7 +26,8 @@ SECRET_KEY = 'django-insecure-73+6_-gcdl6xb%b0xsu6c%p-lb(%t0qd^#!6c+n$5912kf@&k(
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
+CSRF_TRUSTED_ORIGINS = ['https://*.ngrok-free.app', 'https://*.ngrok.io', 'https://*.ngrok.app']
 
 
 # Application definition
@@ -106,7 +107,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'es-ec'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'America/Guayaquil'
 
 USE_I18N = True
 
@@ -118,3 +119,12 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 STATICFILES_DIRS=(os.path.join(BASE_DIR,'RutaExpres/static'),) # Este va a ser una constante 
+
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+LOGIN_URL = 'login'
+LOGIN_REDIRECT_URL = 'inicio'
+LOGOUT_REDIRECT_URL = 'inicio'
+
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+DEFAULT_FROM_EMAIL = 'RutaExpres <noreply@rutaexpres.com>'

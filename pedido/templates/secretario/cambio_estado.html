@@ -1,0 +1,66 @@
+{% extends 'secretario/base_panel.html' %}
+{% load static %}
+{% load rutaexpres_tags %}
+
+{% block panel_contenido %}
+<div class="container-fluid py-4">
+    <h2 class="mb-4"><i class="fas fa-exchange-alt text-primary"></i> Cambiar Estado</h2>
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-white">
+            <h5 class="mb-0">Guía: <strong>{{ encomienda.numero_guia }}</strong></h5>
+        </div>
+        <div class="card-body">
+            <div class="row align-items-center mb-4">
+                <div class="col-auto">
+                    <span class="fs-5">{{ encomienda.estado|badge_estado }}</span>
+                </div>
+                <div class="col-auto">
+                    <i class="fas fa-arrow-right fa-2x text-muted"></i>
+                </div>
+                <div class="col-auto">
+                    <span class="fs-5 text-muted">Nuevo estado</span>
+                </div>
+            </div>
+            <form id="formEstado" method="POST">
+                {% csrf_token %}
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Nuevo Estado *</label>
+                        {{ form.nuevo_estado }}
+                    </div>
+                    {% if form.despachador %}
+                    <div class="col-md-6">
+                        <label class="form-label">Asignar Despachador *</label>
+                        {{ form.despachador }}
+                    </div>
+                    {% endif %}
+                    <div class="col-12">
+                        <label class="form-label">Comentario</label>
+                        {{ form.comentario }}
+                    </div>
+                </div>
+                <div class="mt-4">
+                    <button type="button" class="btn btn-primary" id="btnCambiar"><i class="fas fa-save"></i> Cambiar Estado</button>
+                    <a href="{% url 'detalle_encomienda' encomienda.pk %}" class="btn btn-secondary">Cancelar</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    $('#btnCambiar').click(function() {
+        var nuevoEstado = $('#id_nuevo_estado option:selected').text();
+        Swal.fire({
+            title: '¿Cambiar estado?',
+            html: 'La encomienda <strong>{{ encomienda.numero_guia }}</strong> pasará a <strong>' + nuevoEstado + '</strong>',
+            icon: 'warning', showCancelButton: true,
+            confirmButtonText: 'Sí, cambiar', cancelButtonText: 'Cancelar'
+        }).then((result) => { if (result.isConfirmed) { $('#formEstado').submit(); } });
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,94 @@
+{% extends 'secretario/base_panel.html' %}
+{% load static %}
+{% load rutaexpres_tags %}
+
+{% block extra_css %}
+<style>
+.timeline { position: relative; padding-left: 30px; }
+.timeline::before { content: ''; position: absolute; left: 10px; top: 0; bottom: 0; width: 2px; background: #dee2e6; }
+.timeline-item { position: relative; padding-bottom: 20px; }
+.timeline-dot { position: absolute; left: -25px; top: 5px; width: 12px; height: 12px; border-radius: 50%; }
+.timeline-dot.completed { background: #28a745; }
+.timeline-dot.current { background: #06A3DA; box-shadow: 0 0 0 4px rgba(6,163,218,0.3); animation: pulse 2s infinite; }
+@keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(6,163,218,0.4); } 70% { box-shadow: 0 0 0 8px rgba(6,163,218,0); } 100% { box-shadow: 0 0 0 0 rgba(6,163,218,0); } }
+</style>
+{% endblock %}
+
+{% block panel_contenido %}
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-1"><i class="fas fa-box text-primary"></i> Guía: {{ encomienda.numero_guia }}</h2>
+            <span class="fs-5">{{ encomienda.estado|badge_estado }}</span>
+        </div>
+        <div>
+            <a href="{% url 'cambiar_estado' encomienda.pk %}" class="btn btn-warning"><i class="fas fa-exchange-alt"></i> Cambiar Estado</a>
+            <a href="{% url 'comprobante_encomienda' encomienda.pk %}" class="btn btn-success"><i class="fas fa-file-invoice"></i> Comprobante</a>
+            <a href="{% url 'descargar_comprobante_pdf' encomienda.pk %}" class="btn btn-danger"><i class="fas fa-file-pdf"></i> PDF</a>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Shipment Details -->
+        <div class="col-md-7">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-primary text-white"><i class="fas fa-info-circle"></i> Datos del Envío</div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6 class="text-muted">REMITENTE</h6>
+                            <p><strong>{{ encomienda.cliente.usuario.get_full_name }}</strong><br>
+                            Tel: {{ encomienda.cliente.telefono|default:'-' }}<br>
+                            Cédula: {{ encomienda.cliente.cedula|default:'-' }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="text-muted">DESTINATARIO</h6>
+                            <p><strong>{{ encomienda.nombre_destinatario }}</strong><br>
+                            Tel: {{ encomienda.telefono_destinatario }}<br>
+                            {{ encomienda.direccion_entrega }}</p>
+                        </div>
+                    </div>
+                    <hr>
+                    <div class="row">
+                        <div class="col-md-4"><small class="text-muted">Ciudad Destino</small><p><strong>{{ encomienda.ciudad_destino.nombre }}</strong></p></div>
+                        <div class="col-md-4"><small class="text-muted">Peso</small><p><strong>{{ encomienda.peso|default:'N/A' }} kg</strong></p></div>
+                        <div class="col-md-4"><small class="text-muted">Costo Envío</small><p class="text-success"><strong>${{ encomienda.costo_envio }}</strong></p></div>
+                    </div>
+                    <div class="row">
+                        <div class="col-12"><small class="text-muted">Descripción</small><p>{{ encomienda.descripcion_paquete }}</p></div>
+                    </div>
+                    {% if encomienda.observaciones %}
+                    <div class="row">
+                        <div class="col-12"><small class="text-muted">Observaciones</small><p>{{ encomienda.observaciones }}</p></div>
+                    </div>
+                    {% endif %}
+                    {% if encomienda.despachador_asignado %}
+                    <div class="alert alert-info mb-0"><i class="fas fa-truck"></i> Despachador: <strong>{{ encomienda.despachador_asignado.usuario.get_full_name }}</strong></div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        <!-- Timeline -->
+        <div class="col-md-5">
+            <div class="card shadow-sm">
+                <div class="card-header bg-dark text-white"><i class="fas fa-history"></i> Línea de Tiempo</div>
+                <div class="card-body">
+                    <div class="timeline">
+                        {% for h in historial %}
+                        <div class="timeline-item">
+                            <div class="timeline-dot {% if forloop.last %}current{% else %}completed{% endif %}"></div>
+                            <div class="ms-3">
+                                <strong>{{ h.get_estado_display }}</strong>
+                                <small class="text-muted d-block">{{ h.fecha|date:'d/m/Y H:i' }}</small>
+                                {% if h.comentario %}<small class="text-secondary">{{ h.comentario }}</small>{% endif %}
+                                <small class="text-muted d-block">Por: {{ h.usuario.get_full_name }}</small>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
