@@ -1,0 +1,36 @@
+{% extends './plantillaPrin.html' %}
+{% load static %}
+
+{% block contenido %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-5 col-md-7">
+            <div class="text-center mb-4 wow fadeInUp" data-wow-delay="0.1s">
+                <h6 class="text-secondary text-uppercase">Acceso</h6>
+                <h1>Iniciar Sesión</h1>
+            </div>
+            <div class="card shadow border-0 wow fadeInUp" data-wow-delay="0.2s">
+                <div class="card-body p-5">
+                    <form method="post" action="{% url 'iniciar_sesion' %}">
+                        {% csrf_token %}
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold">Nombre de usuario o Correo</label>
+                            <input type="text" name="username" class="form-control" placeholder="Ej: cliente1" required>
+                        </div>
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold">Contraseña</label>
+                            <input type="password" name="password" class="form-control" placeholder="Contraseña" required>
+                        </div>
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary py-3">Entrar</button>
+                        </div>
+                    </form>
+                    <div class="text-center mt-4">
+                        <p class="mb-0">¿No tienes cuenta? <a href="{% url 'registrar_cliente' %}" class="text-primary fw-semibold">Regístrate aquí</a></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

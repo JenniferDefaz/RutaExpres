@@ -12,6 +12,9 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 
 from pathlib import Path
 import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -63,6 +66,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'pedido.context_processors.rol_usuario',
             ],
         },
     },
@@ -77,7 +81,7 @@ WSGI_APPLICATION = 'RutaExpres.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': 'bdd_RutaExpres.db',
+        'NAME': BASE_DIR / 'bdd_RutaExpres.db',
     }
 }
 
@@ -106,7 +110,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'es-ec'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'America/Guayaquil'
 
 USE_I18N = True
 
@@ -117,4 +121,32 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
 STATIC_URL = 'static/'
-STATICFILES_DIRS=(os.path.join(BASE_DIR,'RutaExpres/static'),) # Este va a ser una constante 
+STATICFILES_DIRS=(os.path.join(BASE_DIR,'RutaExpres/static'),) # Este va a ser una constante
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+LOGIN_URL = '/login/'
+
+MESSAGE_STORAGE = 'django.contrib.messages.storage.session.SessionStorage'
+
+# ── Configuración de Correo SMTP ────────────────────────────
+# Las credenciales se leen desde el archivo .env (nunca hardcodeadas aquí).
+# En desarrollo/producción se usa el backend SMTP real (Gmail).
+# Durante los tests se cambia automáticamente al backend en memoria
+# usando el archivo de settings de test (ver TEST_RUNNER abajo).
+EMAIL_BACKEND    = os.environ.get('EMAIL_BACKEND', 'django.core.mail.backends.smtp.EmailBackend')
+EMAIL_HOST       = os.environ.get('EMAIL_HOST', 'smtp.gmail.com')
+EMAIL_PORT       = int(os.environ.get('EMAIL_PORT', 587))
+EMAIL_USE_TLS    = os.environ.get('EMAIL_USE_TLS', 'True') == 'True'
+EMAIL_HOST_USER  = os.environ.get('EMAIL_HOST_USER', '')
+EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
+DEFAULT_FROM_EMAIL  = os.environ.get('DEFAULT_FROM_EMAIL', EMAIL_HOST_USER)
+
+# ── Configuración de Tests ───────────────────────────────────
+# Cuando se ejecuta `manage.py test`, Django busca este módulo
+# para sobreescribir configuraciones sin tocar settings.py.
+# El archivo pedido/test_settings.py define EMAIL_BACKEND = locmem.
+import sys
+if 'test' in sys.argv or 'pytest' in sys.modules:
+    EMAIL_BACKEND = 'django.core.mail.backends.locmem.EmailBackend'

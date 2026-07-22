@@ -1,0 +1,120 @@
+{% extends './plantillaPrin.html' %}
+{% load static %}
+
+{% block contenido %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8 col-md-10">
+
+            <!-- Encabezado -->
+            <div class="d-flex justify-content-between align-items-center mb-4 wow fadeInUp" data-wow-delay="0.1s">
+                <div>
+                    <h6 class="text-secondary text-uppercase mb-1">Pedidos</h6>
+                    <h1 class="mb-0">Detalle del Pedido</h1>
+                </div>
+                <a href="{% url 'rastrear_pedido' %}" class="btn btn-outline-secondary">
+                    <i class="fa fa-arrow-left me-2"></i>Volver
+                </a>
+            </div>
+
+            <!-- Tarjeta de estado -->
+            <div class="card border-0 shadow-sm mb-4 wow fadeInUp" data-wow-delay="0.2s">
+                <div class="card-header bg-primary text-white py-3 d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fa fa-hashtag me-2"></i>{{ pedido.numero_tracking }}
+                    </h5>
+                    <span class="badge fs-6
+                        {% if pedido.estado == 'pendiente' %}bg-warning text-dark
+                        {% elif pedido.estado == 'en_transito' %}bg-info text-dark
+                        {% elif pedido.estado == 'entregado' %}bg-success
+                        {% else %}bg-danger{% endif %}">
+                        {{ pedido.get_estado_display }}
+                    </span>
+                </div>
+
+                <div class="card-body p-4">
+                    <!-- Datos del cliente -->
+                    <h6 class="text-primary text-uppercase mb-3 border-bottom pb-2">
+                        <i class="fa fa-user me-2"></i>Datos del cliente
+                    </h6>
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6">
+                            <p class="text-muted small mb-1">Nombre completo</p>
+                            <p class="fw-semibold mb-0">{{ pedido.cliente.nombre }} {{ pedido.cliente.apellido }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p class="text-muted small mb-1">Correo electrónico</p>
+                            <p class="fw-semibold mb-0">{{ pedido.cliente.email }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p class="text-muted small mb-1">Teléfono</p>
+                            <p class="fw-semibold mb-0">{{ pedido.cliente.telefono }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p class="text-muted small mb-1">Dirección</p>
+                            <p class="fw-semibold mb-0">{{ pedido.cliente.direccion }}</p>
+                        </div>
+                    </div>
+
+                    <!-- Datos del envío -->
+                    <h6 class="text-primary text-uppercase mb-3 border-bottom pb-2">
+                        <i class="fa fa-shipping-fast me-2"></i>Datos del envío
+                    </h6>
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6">
+                            <p class="text-muted small mb-1">Destinatario</p>
+                            <p class="fw-semibold mb-0"><i class="fa fa-user-tag text-secondary me-1"></i>{{ pedido.destinatario }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p class="text-muted small mb-1">Tipo de servicio</p>
+                            <p class="fw-semibold mb-0">{{ pedido.get_tipo_servicio_display }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p class="text-muted small mb-1">Peso</p>
+                            <p class="fw-semibold mb-0">{{ pedido.peso_kg }} kg</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p class="text-muted small mb-1">Origen</p>
+                            <p class="fw-semibold mb-0"><i class="fa fa-map-marker-alt text-primary me-1"></i>{{ pedido.origen }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p class="text-muted small mb-1">Destino</p>
+                            <p class="fw-semibold mb-0"><i class="fa fa-map-marker-alt text-danger me-1"></i>{{ pedido.destino }}</p>
+                        </div>
+                        <div class="col-12">
+                            <p class="text-muted small mb-1">Descripción de la carga</p>
+                            <p class="fw-semibold mb-0">{{ pedido.descripcion_carga }}</p>
+                        </div>
+                    </div>
+
+                    <!-- Fechas -->
+                    <h6 class="text-primary text-uppercase mb-3 border-bottom pb-2">
+                        <i class="fa fa-clock me-2"></i>Historial
+                    </h6>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <p class="text-muted small mb-1">Fecha de creación</p>
+                            <p class="fw-semibold mb-0">{{ pedido.fecha_creacion|date:"d/m/Y H:i" }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p class="text-muted small mb-1">Última actualización</p>
+                            <p class="fw-semibold mb-0">{{ pedido.fecha_actualizacion|date:"d/m/Y H:i" }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Acciones -->
+            <div class="d-flex gap-2 justify-content-end wow fadeInUp" data-wow-delay="0.3s">
+                <a href="{% url 'rastrear_pedido' %}" class="btn btn-outline-primary">
+                    <i class="fa fa-search me-2"></i>Buscar otro pedido
+                </a>
+                <a href="{% url 'registrar_pedido' %}" class="btn btn-primary">
+                    <i class="fa fa-plus me-2"></i>Nuevo pedido
+                </a>
+            </div>
+
+        </div>
+    </div>
+</div>
+{% endblock %}
