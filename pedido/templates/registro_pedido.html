@@ -194,8 +194,8 @@
             }
         });
 
-        // FileInput para foto del producto
-        $("#foto_producto").fileinput({
+        // FileInput para foto del producto — Django genera id_foto_producto
+        $("#id_foto_producto").fileinput({
             language: "es",
             allowedFileExtensions: ["png", "jpg", "jpeg", "webp"],
             showCaption: true,
@@ -208,8 +208,8 @@
             previewFileType: "image"
         });
 
-        // FileInput para comprobante
-        $("#comprobante_pago").fileinput({
+        // FileInput para comprobante — Django genera id_comprobante_pago
+        $("#id_comprobante_pago").fileinput({
             language: "es",
             allowedFileExtensions: ["png", "jpg", "jpeg", "pdf"],
             showCaption: true,

@@ -225,14 +225,20 @@ def rastrear_pedido(request):
 
 
 def detalle_pedido(request, tracking):
-    """
-    Vista para ver el detalle de un pedido por tracking.
-    Devuelve 404 si no existe.
-    """
     pedido = get_object_or_404(
         Pedido.objects.select_related('cliente'),
         numero_tracking=tracking
     )
+    # Confidencialidad: cliente solo ve sus propios pedidos
+    if request.user.is_authenticated:
+        es_rol_interno = (
+            request.user.groups.filter(name__in=['Secretario', 'Despachador']).exists()
+            or request.user.is_staff
+        )
+        if not es_rol_interno and hasattr(request.user, 'cliente'):
+            if pedido.cliente != request.user.cliente:
+                messages.error(request, 'No tienes permiso para ver este pedido.')
+                return redirect('panel_cliente')
     return render(request, 'detalle_pedido.html', {'pedido': pedido})
 
 
