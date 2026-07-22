@@ -42,7 +42,7 @@
         <div class="card-body p-0">
             {% if pedidos %}
             <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0">
+                <table id="tblPedidos" class="table table-hover align-middle mb-0">
                     <thead class="table-dark">
                         <tr>
                             <th class="ps-4">Tracking</th>
@@ -91,6 +91,12 @@
                                    title="Ver detalle">
                                     <i class="fa fa-eye"></i>
                                 </a>
+                                <a href="{% url 'descargar_orden_pdf' pedido.numero_tracking %}"
+                                   target="_blank"
+                                   class="btn btn-sm btn-outline-danger ms-1"
+                                   title="Descargar PDF">
+                                    <i class="fa fa-file-pdf"></i>
+                                </a>
                             </td>
                         </tr>
                         {% endfor %}
@@ -116,4 +122,20 @@
     </div>
 
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    new DataTable('#tblPedidos', {
+        layout: {
+            topStart: {
+                buttons: ['copyHtml5', 'excelHtml5', 'csvHtml5', 'pdfHtml5']
+            }
+        },
+        language: dtEspanol,
+        columnDefs: [
+            { orderable: false, targets: [6, 8] }
+        ]
+    });
+</script>
 {% endblock %}

@@ -109,6 +109,9 @@
                 <a href="{% url 'rastrear_pedido' %}" class="btn btn-outline-primary">
                     <i class="fa fa-search me-2"></i>Buscar otro pedido
                 </a>
+                <a href="{% url 'descargar_orden_pdf' pedido.numero_tracking %}" target="_blank" class="btn btn-danger">
+                    <i class="fa fa-file-pdf me-2"></i>Descargar Orden PDF
+                </a>
                 <a href="{% url 'registrar_pedido' %}" class="btn btn-primary">
                     <i class="fa fa-plus me-2"></i>Nuevo pedido
                 </a>

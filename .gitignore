@@ -1,6 +1,7 @@
-*.pyc
 __pycache__/
+*.pyc
+*.pyo
 *.db
-.env
-staticfiles/
 media/
+staticfiles/
+.env

@@ -121,14 +121,20 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
 STATIC_URL = 'static/'
-STATICFILES_DIRS=(os.path.join(BASE_DIR,'RutaExpres/static'),) # Este va a ser una constante
+STATICFILES_DIRS=(os.path.join(BASE_DIR,'RutaExpres/static'),)
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media/')
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 LOGIN_URL = '/login/'
 
 MESSAGE_STORAGE = 'django.contrib.messages.storage.session.SessionStorage'
+
+# Tarifa de envío por kg (para cotización automática)
+TARIFA_POR_KG = 2.50  # USD por kg
 
 # ── Configuración de Correo SMTP ────────────────────────────
 # Las credenciales se leen desde el archivo .env (nunca hardcodeadas aquí).

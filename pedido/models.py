@@ -84,6 +84,34 @@ class Pedido(models.Model):
         default='pendiente',
         verbose_name='Estado'
     )
+    foto_producto = models.FileField(
+        upload_to='productos/',
+        null=True, blank=True,
+        verbose_name='Foto del producto'
+    )
+    # ─── Cotización y Pago ────────────────────────────────────
+    precio_envio = models.DecimalField(
+        max_digits=8, decimal_places=2,
+        null=True, blank=True,
+        verbose_name='Precio de envío ($)'
+    )
+    METODO_PAGO_CHOICES = [
+        ('efectivo', 'Efectivo en oficina'),
+        ('transferencia', 'Transferencia bancaria'),
+        ('tarjeta', 'Tarjeta de crédito/débito'),
+    ]
+    metodo_pago = models.CharField(
+        max_length=20,
+        choices=METODO_PAGO_CHOICES,
+        null=True, blank=True,
+        verbose_name='Método de pago'
+    )
+    comprobante_pago = models.FileField(
+        upload_to='comprobantes/',
+        null=True, blank=True,
+        verbose_name='Comprobante de pago'
+    )
+    pago_confirmado = models.BooleanField(default=False, verbose_name='Pago confirmado')
     fecha_creacion = models.DateTimeField(auto_now_add=True, verbose_name='Fecha de creación')
     fecha_actualizacion = models.DateTimeField(auto_now=True, verbose_name='Última actualización')
 

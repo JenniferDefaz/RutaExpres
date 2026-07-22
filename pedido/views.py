@@ -3,8 +3,18 @@ from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User, Group
 from django.contrib.auth.decorators import login_required
-from django.core.mail import send_mail
+from django.core.mail import send_mail, EmailMessage
 from django.conf import settings
+from django.http import HttpResponse
+
+import qrcode
+import io
+from reportlab.lib.pagesizes import A4
+from reportlab.lib import colors
+from reportlab.lib.units import cm
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Image, Table, TableStyle
+from reportlab.lib.styles import ParagraphStyle
+from reportlab.lib.enums import TA_CENTER, TA_LEFT
 
 from .models import Cliente, Pedido
 from .forms import ClienteForm, PedidoForm, BuscarPedidoForm
@@ -40,11 +50,12 @@ def _enviar_bienvenida(cliente):
 
 
 def _enviar_confirmacion_pedido(pedido):
-    """Envía correo de confirmación cuando se registra un pedido."""
+    """Envía correo de confirmación con PDF adjunto cuando se registra un pedido."""
     try:
-        send_mail(
+        pdf_bytes = _generar_pdf_pedido(pedido)
+        email = EmailMessage(
             subject=f'Pedido registrado — Tracking: {pedido.numero_tracking}',
-            message=(
+            body=(
                 f'Hola {pedido.cliente.nombre} {pedido.cliente.apellido},\n\n'
                 f'Tu pedido ha sido registrado exitosamente en RutaExpres.\n\n'
                 f'--- DETALLES DEL PEDIDO ---\n'
@@ -55,16 +66,17 @@ def _enviar_confirmacion_pedido(pedido):
                 f'Destino            : {pedido.destino}\n'
                 f'Peso               : {pedido.peso_kg} kg\n'
                 f'Estado actual      : {pedido.get_estado_display()}\n\n'
-                f'Puedes rastrear tu envío en cualquier momento ingresando tu\n'
-                f'número de tracking en nuestra página web.\n\n'
+                f'Adjunto encontrará su orden de envío en PDF con código QR.\n'
+                f'Puede rastrear su envío en cualquier momento con el número de tracking.\n\n'
                 f'Saludos,\n'
                 f'El equipo de RutaExpres\n'
                 f'Tel: +593 2 345 6789 | info@rutaexpres.com.ec'
             ),
             from_email=settings.DEFAULT_FROM_EMAIL,
-            recipient_list=[pedido.cliente.email],
-            fail_silently=True,
+            to=[pedido.cliente.email],
         )
+        email.attach(f'orden_{pedido.numero_tracking}.pdf', pdf_bytes, 'application/pdf')
+        email.send()
     except Exception:
         pass
 
@@ -150,17 +162,10 @@ def registrar_cliente(request):
 
 @login_required(login_url='iniciar_sesion')
 def registrar_pedido(request):
-    """
-    Vista para registrar un nuevo pedido.
-    GET  → muestra el formulario vacío.
-    POST → valida, guarda y envía correo de confirmación.
-    """
     if request.method == 'POST':
-        form = PedidoForm(request.POST, user=request.user)
+        form = PedidoForm(request.POST, request.FILES, user=request.user)
         if form.is_valid():
             pedido = form.save(commit=False)
-
-            # Si es cliente normal (no staff ni roles internos), asignar su propio perfil
             es_rol_interno = (
                 request.user.groups.filter(name__in=['Secretario', 'Despachador']).exists()
                 or request.user.is_staff
@@ -169,24 +174,27 @@ def registrar_pedido(request):
                 pedido.cliente = request.user.cliente
                 pedido.estado = 'pendiente'
 
+            # Cotización automática: peso × tarifa
+            tarifa = getattr(settings, 'TARIFA_POR_KG', 2.50)
+            pedido.precio_envio = round(float(pedido.peso_kg) * float(tarifa), 2)
+
             pedido.save()
-
-            # Correo de confirmación del pedido
             _enviar_confirmacion_pedido(pedido)
-
             messages.success(
                 request,
-                f'Pedido registrado exitosamente. '
-                f'Número de tracking: {pedido.numero_tracking}. '
-                f'Se envió una confirmación a {pedido.cliente.email}.'
+                f'Pedido registrado. Tracking: {pedido.numero_tracking}. '
+                f'Precio estimado: ${pedido.precio_envio}. '
+                f'Confirmación enviada a {pedido.cliente.email}.'
             )
             return redirect('detalle_pedido', tracking=pedido.numero_tracking)
         else:
             messages.error(request, 'Por favor corrija los errores en el formulario.')
     else:
         form = PedidoForm(user=request.user)
-
-    return render(request, 'registro_pedido.html', {'form': form})
+    return render(request, 'registro_pedido.html', {
+        'form': form,
+        'tarifa_por_kg': getattr(settings, 'TARIFA_POR_KG', 2.50),
+    })
 
 
 def rastrear_pedido(request):
@@ -341,3 +349,165 @@ def panel_cliente(request):
 
     pedidos = request.user.cliente.pedidos.all()
     return render(request, 'panel_cliente.html', {'pedidos': pedidos})
+
+
+# ─── Generación de PDF con QR ────────────────────────────────
+
+def _generar_pdf_pedido(pedido):
+    """Genera el PDF de la orden de pedido con QR. Devuelve bytes."""
+    # QR con el número de tracking
+    qr = qrcode.QRCode(version=1, box_size=6, border=2)
+    qr.add_data(
+        f"RutaExpres - Orden de Envío\n"
+        f"Tracking: {pedido.numero_tracking}\n"
+        f"Cliente: {pedido.cliente.nombre} {pedido.cliente.apellido}\n"
+        f"Destinatario: {pedido.destinatario}\n"
+        f"Origen: {pedido.origen}\n"
+        f"Destino: {pedido.destino}\n"
+        f"Peso: {pedido.peso_kg} kg\n"
+        f"Estado: {pedido.get_estado_display()}"
+    )
+    qr.make(fit=True)
+    qr_img = qr.make_image(fill_color="#003580", back_color="white")
+    qr_buffer = io.BytesIO()
+    qr_img.save(qr_buffer, format='PNG')
+    qr_buffer.seek(0)
+
+    # Estilos
+    titulo = ParagraphStyle('titulo', fontSize=20, alignment=TA_CENTER,
+                             fontName='Helvetica-Bold', textColor=colors.HexColor('#003580'), spaceAfter=4)
+    subtitulo = ParagraphStyle('sub', fontSize=11, alignment=TA_CENTER,
+                                fontName='Helvetica', textColor=colors.HexColor('#555'), spaceAfter=6)
+    label = ParagraphStyle('label', fontSize=10, fontName='Helvetica-Bold',
+                            textColor=colors.HexColor('#003580'))
+    valor = ParagraphStyle('valor', fontSize=10, fontName='Helvetica',
+                            textColor=colors.black)
+    pie = ParagraphStyle('pie', fontSize=8, alignment=TA_CENTER,
+                          fontName='Helvetica-Oblique', textColor=colors.grey)
+
+    buffer = io.BytesIO()
+    doc = SimpleDocTemplate(buffer, pagesize=A4,
+                            rightMargin=2*cm, leftMargin=2*cm,
+                            topMargin=2*cm, bottomMargin=2*cm)
+
+    def draw_border(canvas, doc):
+        canvas.saveState()
+        canvas.setStrokeColor(colors.HexColor('#003580'))
+        canvas.setLineWidth(3)
+        canvas.rect(1*cm, 1*cm, A4[0]-2*cm, A4[1]-2*cm)
+        canvas.restoreState()
+
+    elementos = []
+    elementos.append(Spacer(1, 0.5*cm))
+    elementos.append(Paragraph("ORDEN DE ENVÍO", titulo))
+    elementos.append(Paragraph("RutaExpres — Centro de Soluciones Logísticas", subtitulo))
+    elementos.append(Spacer(1, 0.3*cm))
+
+    # Línea separadora
+    sep = Table([['']], colWidths=[A4[0]-4*cm])
+    sep.setStyle(TableStyle([
+        ('LINEBELOW', (0,0), (-1,-1), 1.5, colors.HexColor('#003580')),
+        ('TOPPADDING', (0,0), (-1,-1), 0),
+        ('BOTTOMPADDING', (0,0), (-1,-1), 8),
+    ]))
+    elementos.append(sep)
+
+    # Datos del pedido + QR lado a lado
+    datos = [
+        [Paragraph("N° Tracking:", label), Paragraph(f"<b>{pedido.numero_tracking}</b>", ParagraphStyle('t', fontSize=12, fontName='Helvetica-Bold', textColor=colors.HexColor('#003580')))],
+        [Paragraph("Estado:", label), Paragraph(pedido.get_estado_display(), valor)],
+        [Paragraph("Cliente:", label), Paragraph(f"{pedido.cliente.nombre} {pedido.cliente.apellido}", valor)],
+        [Paragraph("Email:", label), Paragraph(pedido.cliente.email, valor)],
+        [Paragraph("Teléfono:", label), Paragraph(pedido.cliente.telefono, valor)],
+        [Paragraph("Destinatario:", label), Paragraph(pedido.destinatario, valor)],
+        [Paragraph("Tipo de servicio:", label), Paragraph(pedido.get_tipo_servicio_display(), valor)],
+        [Paragraph("Origen:", label), Paragraph(pedido.origen, valor)],
+        [Paragraph("Destino:", label), Paragraph(pedido.destino, valor)],
+        [Paragraph("Peso:", label), Paragraph(f"{pedido.peso_kg} kg", valor)],
+        [Paragraph("Descripción:", label), Paragraph(pedido.descripcion_carga, valor)],
+        [Paragraph("Fecha:", label), Paragraph(pedido.fecha_creacion.strftime('%d/%m/%Y %H:%M'), valor)],
+    ]
+
+    tabla_datos = Table(datos, colWidths=[4*cm, 9*cm])
+    tabla_datos.setStyle(TableStyle([
+        ('VALIGN', (0,0), (-1,-1), 'TOP'),
+        ('TOPPADDING', (0,0), (-1,-1), 4),
+        ('BOTTOMPADDING', (0,0), (-1,-1), 4),
+        ('ROWBACKGROUNDS', (0,0), (-1,-1), [colors.HexColor('#f0f4ff'), colors.white]),
+    ]))
+
+    qr_image = Image(qr_buffer, width=4*cm, height=4*cm)
+
+    cuerpo = Table(
+        [[tabla_datos, qr_image]],
+        colWidths=[13*cm, 4.5*cm]
+    )
+    cuerpo.setStyle(TableStyle([
+        ('VALIGN', (0,0), (-1,-1), 'TOP'),
+        ('ALIGN', (1,0), (1,0), 'CENTER'),
+        ('LEFTPADDING', (0,0), (-1,-1), 0),
+        ('RIGHTPADDING', (0,0), (-1,-1), 0),
+    ]))
+    elementos.append(cuerpo)
+    elementos.append(Spacer(1, 0.5*cm))
+
+    # Pie
+    sep2 = Table([['']], colWidths=[A4[0]-4*cm])
+    sep2.setStyle(TableStyle([
+        ('LINEABOVE', (0,0), (-1,-1), 1, colors.HexColor('#003580')),
+        ('TOPPADDING', (0,0), (-1,-1), 6),
+    ]))
+    elementos.append(sep2)
+    elementos.append(Paragraph(
+        "Escanee el código QR para rastrear su envío en línea · Tel: +593 2 345 6789 · info@rutaexpres.com.ec",
+        pie
+    ))
+
+    doc.build(elementos, onFirstPage=draw_border, onLaterPages=draw_border)
+    buffer.seek(0)
+    return buffer.read()
+
+
+@login_required(login_url='iniciar_sesion')
+def reporte_global(request):
+    """Reporte global solo para Secretario, Despachador o staff."""
+    es_rol_interno = (
+        request.user.groups.filter(name__in=['Secretario', 'Despachador']).exists()
+        or request.user.is_staff
+    )
+    if not es_rol_interno:
+        messages.error(request, 'No tienes permisos para ver el reporte.')
+        return redirect('panel_cliente')
+
+    pedidos = Pedido.objects.select_related('cliente').all()
+    total = pedidos.count()
+    pendientes = pedidos.filter(estado='pendiente').count()
+    en_transito = pedidos.filter(estado='en_transito').count()
+    entregados = pedidos.filter(estado='entregado').count()
+    cancelados = pedidos.filter(estado='cancelado').count()
+
+    # Ingresos totales (pedidos con precio calculado)
+    from django.db.models import Sum
+    ingresos = pedidos.exclude(precio_envio__isnull=True).aggregate(
+        total=Sum('precio_envio')
+    )['total'] or 0
+
+    return render(request, 'reporte.html', {
+        'total': total,
+        'pendientes': pendientes,
+        'en_transito': en_transito,
+        'entregados': entregados,
+        'cancelados': cancelados,
+        'ingresos': ingresos,
+        'pedidos': pedidos,
+    })
+
+
+@login_required(login_url='iniciar_sesion')
+def descargar_orden_pdf(request, tracking):
+    """Descarga el PDF de la orden de un pedido."""
+    pedido = get_object_or_404(Pedido.objects.select_related('cliente'), numero_tracking=tracking)
+    pdf_bytes = _generar_pdf_pedido(pedido)
+    response = HttpResponse(pdf_bytes, content_type='application/pdf')
+    response['Content-Disposition'] = f'inline; filename="Orden_de_Envio_{tracking}.pdf"'
+    return response

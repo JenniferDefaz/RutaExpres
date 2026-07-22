@@ -143,5 +143,54 @@
             if (input) input.classList.add('is-invalid');
         });
     });
+
+    // Validaciones JS antes de enviar
+    document.getElementById('form-cliente').addEventListener('submit', function(e) {
+        let valido = true;
+
+        // Limpiar errores previos
+        document.querySelectorAll('.js-error').forEach(el => el.remove());
+        document.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
+
+        function mostrarError(inputId, mensaje) {
+            const input = document.getElementById(inputId);
+            if (!input) return;
+            input.classList.add('is-invalid');
+            const div = document.createElement('div');
+            div.className = 'invalid-feedback d-block js-error';
+            div.textContent = mensaje;
+            input.parentNode.appendChild(div);
+            valido = false;
+        }
+
+        const nombre = document.getElementById('id_nombre').value.trim();
+        if (!nombre) mostrarError('id_nombre', 'El nombre es obligatorio.');
+        else if (nombre.length < 2) mostrarError('id_nombre', 'Mínimo 2 caracteres.');
+
+        const apellido = document.getElementById('id_apellido').value.trim();
+        if (!apellido) mostrarError('id_apellido', 'El apellido es obligatorio.');
+        else if (apellido.length < 2) mostrarError('id_apellido', 'Mínimo 2 caracteres.');
+
+        const email = document.getElementById('id_email').value.trim();
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!email) mostrarError('id_email', 'El correo electrónico es obligatorio.');
+        else if (!emailRegex.test(email)) mostrarError('id_email', 'Ingrese un correo electrónico válido.');
+
+        const password = document.getElementById('id_password').value;
+        if (!password) mostrarError('id_password', 'La contraseña es obligatoria.');
+        else if (password.length < 8) mostrarError('id_password', 'La contraseña debe tener al menos 8 caracteres.');
+
+        const passwordConfirm = document.getElementById('id_password_confirm').value;
+        if (!passwordConfirm) mostrarError('id_password_confirm', 'Confirme su contraseña.');
+        else if (password !== passwordConfirm) mostrarError('id_password_confirm', 'Las contraseñas no coinciden.');
+
+        const telefono = document.getElementById('id_telefono').value.trim();
+        if (!telefono) mostrarError('id_telefono', 'El teléfono es obligatorio.');
+
+        const direccion = document.getElementById('id_direccion').value.trim();
+        if (!direccion) mostrarError('id_direccion', 'La dirección es obligatoria.');
+
+        if (!valido) e.preventDefault();
+    });
 </script>
 {% endblock %}

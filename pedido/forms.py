@@ -101,7 +101,8 @@ class PedidoForm(forms.ModelForm):
     class Meta:
         model = Pedido
         fields = ['cliente', 'destinatario', 'tipo_servicio', 'origen', 'destino',
-                  'descripcion_carga', 'peso_kg', 'estado']
+                  'descripcion_carga', 'peso_kg', 'foto_producto',
+                  'metodo_pago', 'comprobante_pago', 'estado']
         widgets = {
             'cliente': forms.Select(attrs={'class': 'form-select'}),
             'destinatario': forms.TextInput(attrs={
@@ -127,7 +128,11 @@ class PedidoForm(forms.ModelForm):
                 'placeholder': '0.00',
                 'min': '0.01',
                 'step': '0.01',
+                'id': 'id_peso_kg',
             }),
+            'foto_producto': forms.FileInput(attrs={'class': 'form-control'}),
+            'metodo_pago': forms.Select(attrs={'class': 'form-select'}),
+            'comprobante_pago': forms.FileInput(attrs={'class': 'form-control'}),
             'estado': forms.Select(attrs={'class': 'form-select'}),
         }
 
