@@ -1,123 +1,180 @@
 from django import forms
-from django.contrib.auth.models import User
-from django.contrib.auth.forms import AuthenticationForm
-from .models import PerfilUsuario, Ciudad, Encomienda
+from .models import Cliente, Pedido
 
-class LoginForm(AuthenticationForm):
-    """Custom login form with Bootstrap styling."""
-    username = forms.CharField(
-        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Usuario', 'id': 'id_username'})
-    )
+
+class ClienteForm(forms.ModelForm):
     password = forms.CharField(
-        widget=forms.PasswordInput(attrs={'class': 'form-control', 'placeholder': 'Contraseña', 'id': 'id_password'})
+        widget=forms.PasswordInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Mínimo 8 caracteres',
+        }),
+        label='Contraseña',
+        min_length=8,
+        error_messages={'min_length': 'La contraseña debe tener al menos 8 caracteres.'},
+    )
+    password_confirm = forms.CharField(
+        widget=forms.PasswordInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Repite tu contraseña',
+        }),
+        label='Confirmar contraseña',
     )
 
-class ClienteForm(forms.Form):
-    """Form for secretary to register a new client. Creates User + PerfilUsuario."""
-    username = forms.CharField(max_length=150, widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Nombre de usuario', 'id': 'id_username'}))
-    first_name = forms.CharField(max_length=150, widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Nombres', 'id': 'id_first_name'}), label='Nombres')
-    last_name = forms.CharField(max_length=150, widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Apellidos', 'id': 'id_last_name'}), label='Apellidos')
-    email = forms.EmailField(required=False, widget=forms.EmailInput(attrs={'class': 'form-control', 'placeholder': 'correo@ejemplo.com', 'id': 'id_email'}))
-    password = forms.CharField(widget=forms.PasswordInput(attrs={'class': 'form-control', 'placeholder': 'Contraseña', 'id': 'id_password'}), label='Contraseña')
-    telefono = forms.CharField(max_length=15, required=False, widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': '0999999999', 'id': 'id_telefono'}), label='Teléfono')
-    cedula = forms.CharField(max_length=13, required=False, widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': '1234567890', 'id': 'id_cedula'}), label='Cédula')
-    direccion = forms.CharField(required=False, widget=forms.Textarea(attrs={'class': 'form-control', 'rows': 2, 'placeholder': 'Dirección habitual', 'id': 'id_direccion'}), label='Dirección')
-
-    def clean_username(self):
-        username = self.cleaned_data['username']
-        if User.objects.filter(username=username).exists():
-            raise forms.ValidationError('Este nombre de usuario ya está en uso.')
-        return username
-
-    def save(self):
-        data = self.cleaned_data
-        user = User.objects.create_user(
-            username=data['username'],
-            password=data['password'],
-            first_name=data['first_name'],
-            last_name=data['last_name'],
-            email=data.get('email', '')
-        )
-        perfil = PerfilUsuario.objects.create(
-            usuario=user,
-            rol='CLIENTE',
-            telefono=data.get('telefono', ''),
-            cedula=data.get('cedula', ''),
-            direccion=data.get('direccion', '')
-        )
-        return user, perfil
-
-class ClienteEditForm(forms.Form):
-    """Form for editing existing client (no password change)."""
-    first_name = forms.CharField(max_length=150, widget=forms.TextInput(attrs={'class': 'form-control', 'id': 'id_first_name'}), label='Nombres')
-    last_name = forms.CharField(max_length=150, widget=forms.TextInput(attrs={'class': 'form-control', 'id': 'id_last_name'}), label='Apellidos')
-    email = forms.EmailField(required=False, widget=forms.EmailInput(attrs={'class': 'form-control', 'id': 'id_email'}))
-    telefono = forms.CharField(max_length=15, required=False, widget=forms.TextInput(attrs={'class': 'form-control', 'id': 'id_telefono'}), label='Teléfono')
-    cedula = forms.CharField(max_length=13, required=False, widget=forms.TextInput(attrs={'class': 'form-control', 'id': 'id_cedula'}), label='Cédula')
-    direccion = forms.CharField(required=False, widget=forms.Textarea(attrs={'class': 'form-control', 'rows': 2, 'id': 'id_direccion'}), label='Dirección')
-
-class CiudadForm(forms.ModelForm):
     class Meta:
-        model = Ciudad
-        fields = ['nombre', 'provincia', 'tarifa_base', 'activa']
+        model = Cliente
+        fields = ['nombre', 'apellido', 'email', 'telefono', 'direccion']
         widgets = {
-            'nombre': forms.TextInput(attrs={'class': 'form-control', 'id': 'id_nombre'}),
-            'provincia': forms.TextInput(attrs={'class': 'form-control', 'id': 'id_provincia'}),
-            'tarifa_base': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01', 'id': 'id_tarifa_base'}),
-            'activa': forms.CheckboxInput(attrs={'class': 'form-check-input', 'id': 'id_activa'}),
+            'nombre': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Ingrese el nombre',
+            }),
+            'apellido': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Ingrese el apellido',
+            }),
+            'email': forms.EmailInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'ejemplo@correo.com',
+            }),
+            'telefono': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': '+593 99 999 9999',
+            }),
+            'direccion': forms.Textarea(attrs={
+                'class': 'form-control',
+                'rows': 3,
+                'placeholder': 'Ingrese la dirección completa',
+            }),
         }
 
-class EncomiendaForm(forms.ModelForm):
-    """Form for registering a new shipment."""
-    class Meta:
-        model = Encomienda
-        fields = ['cliente', 'ciudad_destino', 'nombre_destinatario', 'telefono_destinatario',
-                  'direccion_entrega', 'descripcion_paquete', 'peso', 'valor_declarado', 'observaciones']
-        widgets = {
-            'cliente': forms.Select(attrs={'class': 'form-select', 'id': 'id_cliente'}),
-            'ciudad_destino': forms.Select(attrs={'class': 'form-select', 'id': 'id_ciudad_destino'}),
-            'nombre_destinatario': forms.TextInput(attrs={'class': 'form-control', 'id': 'id_nombre_destinatario'}),
-            'telefono_destinatario': forms.TextInput(attrs={'class': 'form-control', 'id': 'id_telefono_destinatario'}),
-            'direccion_entrega': forms.Textarea(attrs={'class': 'form-control', 'rows': 2, 'id': 'id_direccion_entrega'}),
-            'descripcion_paquete': forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'id': 'id_descripcion_paquete'}),
-            'peso': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01', 'id': 'id_peso'}),
-            'valor_declarado': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01', 'id': 'id_valor_declarado'}),
-            'observaciones': forms.Textarea(attrs={'class': 'form-control', 'rows': 2, 'id': 'id_observaciones'}),
-        }
+    def clean_nombre(self):
+        valor = self.cleaned_data.get('nombre', '').strip()
+        if not valor:
+            raise forms.ValidationError('El nombre no puede estar vacío.')
+        if len(valor) < 2:
+            raise forms.ValidationError('El nombre debe tener al menos 2 caracteres.')
+        return valor
 
+    def clean_apellido(self):
+        valor = self.cleaned_data.get('apellido', '').strip()
+        if not valor:
+            raise forms.ValidationError('El apellido no puede estar vacío.')
+        if len(valor) < 2:
+            raise forms.ValidationError('El apellido debe tener al menos 2 caracteres.')
+        return valor
+
+    def clean_email(self):
+        email = self.cleaned_data.get('email', '').strip().lower()
+        # Al editar, excluir el propio registro
+        qs = Cliente.objects.filter(email=email)
+        if self.instance.pk:
+            qs = qs.exclude(pk=self.instance.pk)
+        if qs.exists():
+            raise forms.ValidationError('Ya existe un cliente registrado con este correo electrónico.')
+        return email
+
+    def clean_direccion(self):
+        valor = self.cleaned_data.get('direccion', '').strip()
+        if not valor:
+            raise forms.ValidationError('La dirección no puede estar vacía.')
+        return valor
+
+    def clean(self):
+        cleaned = super().clean()
+        password = cleaned.get('password')
+        password_confirm = cleaned.get('password_confirm')
+        if password and password_confirm and password != password_confirm:
+            self.add_error('password_confirm', 'Las contraseñas no coinciden.')
+        return cleaned
+
+
+class PedidoForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
+        self.user = kwargs.pop('user', None)
         super().__init__(*args, **kwargs)
-        # Only show clients (rol=CLIENTE)
-        self.fields['cliente'].queryset = PerfilUsuario.objects.filter(rol='CLIENTE').select_related('usuario')
-        # Only show active cities
-        self.fields['ciudad_destino'].queryset = Ciudad.objects.filter(activa=True)
+        if self.user and hasattr(self.user, 'cliente') and not self.user.groups.filter(name__in=['Secretario', 'Despachador']).exists() and not self.user.is_staff:
+            if 'cliente' in self.fields:
+                del self.fields['cliente']
+            if 'estado' in self.fields:
+                del self.fields['estado']
 
-class CambioEstadoForm(forms.Form):
-    """Form for changing shipment state."""
-    nuevo_estado = forms.ChoiceField(
-        choices=[],
-        widget=forms.Select(attrs={'class': 'form-select', 'id': 'id_nuevo_estado'}),
-        label='Nuevo Estado'
-    )
-    comentario = forms.CharField(
-        required=False,
-        widget=forms.Textarea(attrs={'class': 'form-control', 'rows': 2, 'id': 'id_comentario', 'placeholder': 'Comentario opcional...'}),
-        label='Comentario'
-    )
-    despachador = forms.ModelChoiceField(
-        queryset=PerfilUsuario.objects.filter(rol='DESPACHADOR'),
-        required=False,
-        widget=forms.Select(attrs={'class': 'form-select', 'id': 'id_despachador'}),
-        label='Asignar Despachador'
+    class Meta:
+        model = Pedido
+        fields = ['cliente', 'destinatario', 'tipo_servicio', 'origen', 'destino',
+                  'descripcion_carga', 'peso_kg', 'foto_producto',
+                  'metodo_pago', 'comprobante_pago', 'estado']
+        widgets = {
+            'cliente': forms.Select(attrs={'class': 'form-select'}),
+            'destinatario': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Nombre de quien recibe',
+            }),
+            'tipo_servicio': forms.Select(attrs={'class': 'form-select'}),
+            'origen': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Ciudad / País de origen',
+            }),
+            'destino': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Ciudad / País de destino',
+            }),
+            'descripcion_carga': forms.Textarea(attrs={
+                'class': 'form-control',
+                'rows': 3,
+                'placeholder': 'Describa el contenido del envío',
+            }),
+            'peso_kg': forms.NumberInput(attrs={
+                'class': 'form-control',
+                'placeholder': '0.00',
+                'min': '0.01',
+                'step': '0.01',
+                'id': 'id_peso_kg',
+            }),
+            'foto_producto': forms.FileInput(attrs={'class': 'form-control'}),
+            'metodo_pago': forms.Select(attrs={'class': 'form-select'}),
+            'comprobante_pago': forms.FileInput(attrs={'class': 'form-control'}),
+            'estado': forms.Select(attrs={'class': 'form-select'}),
+        }
+
+    def clean_peso_kg(self):
+        peso = self.cleaned_data.get('peso_kg')
+        if peso is not None and peso <= 0:
+            raise forms.ValidationError('El peso debe ser mayor que cero.')
+        return peso
+
+    def clean_origen(self):
+        valor = self.cleaned_data.get('origen', '').strip()
+        if not valor:
+            raise forms.ValidationError('El origen no puede estar vacío.')
+        return valor
+
+    def clean_destino(self):
+        valor = self.cleaned_data.get('destino', '').strip()
+        if not valor:
+            raise forms.ValidationError('El destino no puede estar vacío.')
+        return valor
+
+    def clean(self):
+        cleaned = super().clean()
+        origen = cleaned.get('origen', '').strip().lower()
+        destino = cleaned.get('destino', '').strip().lower()
+        if origen and destino and origen == destino:
+            raise forms.ValidationError('El origen y el destino no pueden ser iguales.')
+        return cleaned
+
+
+class BuscarPedidoForm(forms.Form):
+    numero_tracking = forms.CharField(
+        max_length=20,
+        label='Número de tracking',
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Ej: RE-A1B2C3D4',
+        })
     )
 
-    def __init__(self, encomienda, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        # Only show valid next states
-        estados_siguientes = encomienda.get_estados_siguientes()
-        self.fields['nuevo_estado'].choices = [
-            (e, dict(Encomienda.ESTADOS).get(e, e)) for e in estados_siguientes
-        ]
-        # Show despachador field only when transitioning to EN_DESPACHO
-        if encomienda.estado != 'EN_CLASIFICACION':
-            del self.fields['despachador']
+    def clean_numero_tracking(self):
+        valor = self.cleaned_data.get('numero_tracking', '').strip().upper()
+        if not valor:
+            raise forms.ValidationError('Ingrese un número de tracking.')
+        return valor

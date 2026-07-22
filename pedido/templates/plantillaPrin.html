@@ -1,14 +1,13 @@
-{% load static %}
-{% load rutaexpres_tags %}
+{% load static %} <!-- Hace el llamado a todos los archivos de la carpeta static -->
 <!DOCTYPE html>
-<html lang="es">
+<html lang="en">
 
 <head>
     <meta charset="utf-8">
-    <title>{% block page_title %}RutaExpres - Gestión de Encomiendas{% endblock %}</title>
+    <title>RutaExpres - Centro de Soluciones</title>
     <meta content="width=device-width, initial-scale=1.0" name="viewport">
-    <meta content="" name="keywords">
-    <meta content="" name="description">
+    <meta content="logistica, envios, rastreo, servientrega, ecuador, colombia" name="keywords">
+    <meta content="RutaExpres - Centro de Soluciones. Envía y rastrea tus paquetes con seguridad." name="description">
 
     <!-- Favicon -->
     <link href="{% static 'img/favicon.ico' %}" rel="icon">
@@ -32,10 +31,12 @@
     <!-- Template Stylesheet -->
     <link href="{% static 'css/style.css' %}" rel="stylesheet">
 
-    <!-- SweetAlert2 -->
-    <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet">
-    <!-- DataTables -->
-    <link href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css" rel="stylesheet">
+    <!-- DataTables CSS -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/2.3.8/css/dataTables.dataTables.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/buttons/3.2.6/css/buttons.dataTables.min.css">
+
+    <!-- Bootstrap FileInput CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-fileinput/5.5.4/css/fileinput.min.css">
 
     {% block extra_css %}{% endblock %}
 </head>
@@ -52,87 +53,78 @@
 
     <!-- Navbar Start -->
     <nav class="navbar navbar-expand-lg bg-white navbar-light shadow border-top border-5 border-primary sticky-top p-0">
-        <a href="{% url 'inicio' %}" class="navbar-brand bg-primary d-flex align-items-center px-4 px-lg-5">
-            <img src="{% static 'img/logo.png' %}" alt="RutaExpres" style="height: 50px;" class="mb-2">
+        <a href="/inicio/" class="navbar-brand bg-primary d-flex align-items-center px-4 px-lg-5">
+            <h2 class="mb-2 text-white">RutaExpres</h2>
         </a>
         <button type="button" class="navbar-toggler me-4" data-bs-toggle="collapse" data-bs-target="#navbarCollapse">
             <span class="navbar-toggler-icon"></span>
         </button>
         <div class="collapse navbar-collapse" id="navbarCollapse">
             <div class="navbar-nav ms-auto p-4 p-lg-0">
+                <a href="{% url 'inicio' %}" class="nav-item nav-link">Inicio</a>
                 {% if user.is_authenticated %}
-                    {% if user|has_role:'SECRETARIO' %}
-                        <a href="{% url 'dashboard_secretario' %}" class="nav-item nav-link">Dashboard</a>
-                        <a href="{% url 'listar_encomiendas' %}" class="nav-item nav-link">Encomiendas</a>
-                        <a href="{% url 'listar_clientes' %}" class="nav-item nav-link">Clientes</a>
-                        <a href="{% url 'listar_ciudades' %}" class="nav-item nav-link">Ciudades</a>
-                    {% elif user|has_role:'DESPACHADOR' %}
-                        <a href="{% url 'mis_asignaciones' %}" class="nav-item nav-link">Mis Asignaciones</a>
-                    {% elif user|has_role:'CLIENTE' %}
-                        <a href="{% url 'mis_envios' %}" class="nav-item nav-link">Mis Envíos</a>
+                    {% if es_secretario %}
+                        <a href="{% url 'lista_pedidos' %}" class="nav-item nav-link">Panel Admin</a>
+                        <a href="{% url 'reporte_global' %}" class="nav-item nav-link">
+                            <i class="fa fa-chart-bar me-1"></i>Reporte
+                        </a>
+                        <a href="{% url 'registrar_cliente' %}" class="nav-item nav-link">Registrar Cliente</a>
+                    {% elif es_despachador %}
+                        <a href="{% url 'lista_pedidos' %}" class="nav-item nav-link">Panel Despacho</a>
+                    {% else %}
+                        <a href="{% url 'panel_cliente' %}" class="nav-item nav-link">Mi Panel</a>
                     {% endif %}
-                    <a href="{% url 'rastreo_publico' %}" class="nav-item nav-link">Rastrear Envío</a>
-                    <a href="{% url 'logout' %}" class="nav-item nav-link"><i class="fas fa-sign-out-alt"></i> Cerrar Sesión</a>
+                    <a href="{% url 'registrar_pedido' %}" class="nav-item nav-link">Nuevo Pedido</a>
+                    <a href="{% url 'cerrar_sesion' %}" class="nav-item nav-link">Cerrar Sesión</a>
                 {% else %}
-                    <a href="{% url 'inicio' %}" class="nav-item nav-link">Inicio</a>
-                    <a href="{% url 'rastreo_publico' %}" class="nav-item nav-link">Rastrear Envío</a>
-                    <a href="{% url 'login' %}" class="nav-item nav-link"><i class="fas fa-sign-in-alt"></i> Iniciar Sesión</a>
+                    <a href="{% url 'registrar_cliente' %}" class="nav-item nav-link">Registrarse</a>
+                    <a href="{% url 'rastrear_pedido' %}" class="nav-item nav-link">Rastrear Pedido</a>
+                    <a href="{% url 'iniciar_sesion' %}" class="nav-item nav-link">Iniciar Sesión</a>
                 {% endif %}
             </div>
+            <h4 class="m-0 pe-lg-5 d-none d-lg-block"><i class="fa fa-headphones text-primary me-3"></i>+593 2 345 6789</h4>
         </div>
     </nav>
-
-    <!-- Django Messages -->
-    {% if messages %}
-    <div class="container mt-3">
-        {% for message in messages %}
-        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
-            {{ message }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-        {% endfor %}
-    </div>
-    {% endif %}
-
-    {% block contenido %}{% endblock %}
+    {% block contenido %}
+    {% endblock %}
 
     <div class="container-fluid bg-dark text-light footer pt-5 wow fadeIn" data-wow-delay="0.1s" style="margin-top: 6rem;">
         <div class="container py-5">
             <div class="row g-5">
                 <div class="col-lg-3 col-md-6">
-                    <h4 class="text-light mb-4">Address</h4>
-                    <p class="mb-2"><i class="fa fa-map-marker-alt me-3"></i>123 Street, New York, USA</p>
-                    <p class="mb-2"><i class="fa fa-phone-alt me-3"></i>+012 345 67890</p>
-                    <p class="mb-2"><i class="fa fa-envelope me-3"></i>info@example.com</p>
+                    <h4 class="text-light mb-4">Contacto</h4>
+                    <p class="mb-2"><i class="fa fa-map-marker-alt me-3"></i>Av. Principal 123, Quito, Ecuador</p>
+                    <p class="mb-2"><i class="fa fa-phone-alt me-3"></i>+593 2 345 6789</p>
+                    <p class="mb-2"><i class="fa fa-envelope me-3"></i>info@rutaexpres.com.ec</p>
                     <div class="d-flex pt-2">
                         <a class="btn btn-outline-light btn-social" href=""><i class="fab fa-twitter"></i></a>
                         <a class="btn btn-outline-light btn-social" href=""><i class="fab fa-facebook-f"></i></a>
                         <a class="btn btn-outline-light btn-social" href=""><i class="fab fa-youtube"></i></a>
-                        <a class="btn btn-outline-light btn-social" href=""><i class="fab fa-linkedin-in"></i></a>
+                        <a class="btn btn-outline-light btn-social" href=""><i class="fab fa-instagram"></i></a>
                     </div>
                 </div>
                 <div class="col-lg-3 col-md-6">
-                    <h4 class="text-light mb-4">Services</h4>
-                    <a class="btn btn-link" href="">Air Freight</a>
-                    <a class="btn btn-link" href="">Sea Freight</a>
-                    <a class="btn btn-link" href="">Road Freight</a>
-                    <a class="btn btn-link" href="">Logistic Solutions</a>
-                    <a class="btn btn-link" href="">Industry solutions</a>
+                    <h4 class="text-light mb-4">Nuestros Servicios</h4>
+                    <a class="btn btn-link" href="">Documentos y Paquetes</a>
+                    <a class="btn btn-link" href="">Carga Masiva</a>
+                    <a class="btn btn-link" href="">Logística Internacional</a>
+                    <a class="btn btn-link" href="">Soluciones E-commerce</a>
+                    <a class="btn btn-link" href="">Almacenamiento</a>
                 </div>
                 <div class="col-lg-3 col-md-6">
-                    <h4 class="text-light mb-4">Quick Links</h4>
-                    <a class="btn btn-link" href="">About Us</a>
-                    <a class="btn btn-link" href="">Contact Us</a>
-                    <a class="btn btn-link" href="">Our Services</a>
-                    <a class="btn btn-link" href="">Terms & Condition</a>
-                    <a class="btn btn-link" href="">Support</a>
+                    <h4 class="text-light mb-4">Enlaces Rápidos</h4>
+                    <a class="btn btn-link" href="">Rastrear Envío</a>
+                    <a class="btn btn-link" href="">Cotizar Envío</a>
+                    <a class="btn btn-link" href="">Puntos de Atención</a>
+                    <a class="btn btn-link" href="">Términos y Condiciones</a>
+                    <a class="btn btn-link" href="">Preguntas Frecuentes</a>
                 </div>
                 <div class="col-lg-3 col-md-6">
-                    <h4 class="text-light mb-4">Newsletter</h4>
-                    <p>Dolor amet sit justo amet elitr clita ipsum elitr est.</p>
+                    <h4 class="text-light mb-4">Boletín Informativo</h4>
+                    <p>Suscríbete para recibir noticias y ofertas especiales sobre nuestros servicios logísticos.</p>
                     <div class="position-relative mx-auto" style="max-width: 400px;">
-                        <input class="form-control border-0 w-100 py-3 ps-4 pe-5" type="text" placeholder="Your email">
-                        <button type="button" class="btn btn-primary py-2 position-absolute top-0 end-0 mt-2 me-2">SignUp</button>
+                        <input class="form-control border-0 w-100 py-3 ps-4 pe-5" type="text" placeholder="Tu correo electrónico">
+                        <button type="button" class="btn btn-primary py-2 position-absolute top-0 end-0 mt-2 me-2">Suscribirse</button>
                     </div>
                 </div>
             </div>
@@ -141,12 +133,10 @@
             <div class="copyright">
                 <div class="row">
                     <div class="col-md-6 text-center text-md-start mb-3 mb-md-0">
-                        &copy; <a class="border-bottom" href="#">Your Site Name</a>, All Right Reserved.
+                        &copy; <a class="border-bottom" href="#">RutaExpres Centro de Soluciones</a>, Todos los derechos reservados.
                     </div>
                     <div class="col-md-6 text-center text-md-end">
-                        <!--/*** This template is free as long as you keep the footer author’s credit link/attribution link/backlink. If you'd like to use the template without the footer author’s credit link/attribution link/backlink, you can purchase the Credit Removal License from "https://htmlcodex.com/credit-removal". Thank you for your support. ***/-->
-                        Designed By <a class="border-bottom" href="https://htmlcodex.com">HTML Codex</a>
-                        </br>Distributed By <a class="border-bottom" href="https://themewagon.com" target="_blank">ThemeWagon</a>
+                        Diseñado para ofrecer el mejor servicio.
                     </div>
                 </div>
             </div>
@@ -162,6 +152,11 @@
     <!-- JavaScript Libraries -->
     <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Bootstrap FileInput JS — carga antes del main.js para que $ esté disponible -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-fileinput/5.5.4/js/fileinput.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-fileinput/5.5.4/js/locales/es.min.js"></script>
+
     <script src="{% static 'lib/wow/wow.min.js' %}"></script>
     <script src="{% static 'lib/easing/easing.min.js' %}"></script>
     <script src="{% static 'lib/waypoints/waypoints.min.js' %}"></script>
@@ -173,12 +168,74 @@
 
     <!-- SweetAlert2 -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <!-- DataTables -->
-    <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
-    <script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js"></script>
-    <!-- jQuery Validate -->
-    <script src="https://cdn.jsdelivr.net/npm/jquery-validation@1.19.5/dist/jquery.validate.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/jquery-validation@1.19.5/dist/additional-methods.min.js"></script>
+
+    <!-- DataTables JS -->
+    <script src="https://cdn.datatables.net/2.3.8/js/dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/3.2.6/js/dataTables.buttons.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js"></script>
+    <script src="https://cdn.datatables.net/buttons/3.2.6/js/buttons.html5.min.js"></script>
+
+    <!-- Traducción DataTables español -->
+    <script>
+        const dtEspanol = {
+            emptyTable:   'No hay datos disponibles.',
+            zeroRecords:  'No se encontraron resultados.',
+            info:         'Mostrando _START_ a _END_ de _TOTAL_ entradas',
+            infoEmpty:    'Mostrando 0 a 0 de 0 entradas',
+            infoFiltered: '(filtrado de _MAX_ entradas totales)',
+            search:       'Buscar:',
+            lengthMenu:   'Mostrar _MENU_ entradas',
+            paginate: {
+                first: 'Primero', last: 'Último',
+                next: 'Siguiente', previous: 'Anterior'
+            }
+        };
+    </script>
+
+    <!-- Confirmación de eliminación con SweetAlert2 -->
+    <script>
+        function confirmarEliminacion(btn) {
+            var url = btn.getAttribute('data-url');
+            Swal.fire({
+                title: '¿Está seguro?',
+                text: '¡Esta acción no se puede revertir!',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Sí, eliminar',
+                cancelButtonText: 'Cancelar'
+            }).then(function(result) {
+                if (result.isConfirmed) {
+                    window.location.href = url;
+                }
+            });
+        }
+    </script>
+
+    <!-- Importando la libreria de SweetAlert2 para mostrar alertas bonitas -->
+    <!-- (ya cargado arriba) -->
+
+    <!-- Mostrar mensajes de Django como alertas SweetAlert2 -->
+    {% if messages %}
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            {% for message in messages %}
+            Swal.fire({
+                icon: '{% if message.tags == "success" %}success{% elif message.tags == "error" %}error{% elif message.tags == "warning" %}warning{% else %}info{% endif %}',
+                title: '{% if message.tags == "success" %}¡Éxito!{% elif message.tags == "error" %}¡Error!{% elif message.tags == "warning" %}Advertencia{% else %}Información{% endif %}',
+                text: '{{ message|escapejs }}',
+                confirmButtonText: 'Aceptar',
+                confirmButtonColor: '#009C3B',
+                timer: {% if message.tags == "success" %}4000{% else %}0{% endif %},
+                timerProgressBar: {% if message.tags == "success" %}true{% else %}false{% endif %},
+            });
+            {% endfor %}
+        });
+    </script>
+    {% endif %}
 
     {% block extra_js %}{% endblock %}
 </body>

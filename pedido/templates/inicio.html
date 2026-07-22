@@ -1,6 +1,5 @@
 {% extends './plantillaPrin.html' %}
 {% load static %}
-{% load rutaexpres_tags %}
 
 {% block contenido %}
     <!-- Carousel Start -->
@@ -12,35 +11,11 @@
                     <div class="container">
                         <div class="row justify-content-start">
                             <div class="col-10 col-lg-8">
-                                <h5 class="text-white text-uppercase mb-3 animated slideInDown">Logística en Ecuador</h5>
-                                <h1 class="display-3 text-white animated slideInDown mb-4">Envío de Encomiendas <span class="text-primary">Seguro y Rápido</span></h1>
-                                <p class="fs-5 fw-medium text-white mb-4 pb-2">Tu paquete, nuestra prioridad. Rastreo en tiempo real y entrega garantizada en todo el país.</p>
-                                <a href="{% url 'rastreo_publico' %}" class="btn btn-primary py-md-3 px-md-5 me-3 animated slideInLeft">Rastrear Envío</a>
-                                {% if user.is_authenticated and user|has_role:'SECRETARIO' %}
-                                <a href="{% url 'registrar_encomienda' %}" class="btn btn-secondary py-md-3 px-md-5 animated slideInRight">Enviar Encomienda</a>
-                                {% else %}
-                                <a href="{% url 'login' %}" class="btn btn-secondary py-md-3 px-md-5 animated slideInRight">Enviar Encomienda</a>
-                                {% endif %}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="owl-carousel-item position-relative">
-                <img class="img-fluid" src="{% static 'img/carousel-2.jpg' %}" alt="">
-                <div class="position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center" style="background: rgba(6, 3, 21, .5);">
-                    <div class="container">
-                        <div class="row justify-content-start">
-                            <div class="col-10 col-lg-8">
-                                <h5 class="text-white text-uppercase mb-3 animated slideInDown">Logística en Ecuador</h5>
-                                <h1 class="display-3 text-white animated slideInDown mb-4">Cobertura Nacional <span class="text-primary">en Ecuador</span></h1>
-                                <p class="fs-5 fw-medium text-white mb-4 pb-2">Llegamos a todas las ciudades del país con el mejor servicio de transporte y encomiendas.</p>
-                                <a href="{% url 'rastreo_publico' %}" class="btn btn-primary py-md-3 px-md-5 me-3 animated slideInLeft">Rastrear Envío</a>
-                                {% if user.is_authenticated and user|has_role:'SECRETARIO' %}
-                                <a href="{% url 'registrar_encomienda' %}" class="btn btn-secondary py-md-3 px-md-5 animated slideInRight">Enviar Encomienda</a>
-                                {% else %}
-                                <a href="{% url 'login' %}" class="btn btn-secondary py-md-3 px-md-5 animated slideInRight">Enviar Encomienda</a>
-                                {% endif %}
+                                <h5 class="text-white text-uppercase mb-3 animated slideInDown">Centro de Soluciones Logísticas</h5>
+                                <h1 class="display-3 text-white animated slideInDown mb-4">Tu mejor aliado en <span class="text-primary">Envíos</span> y Mensajería</h1>
+                                <p class="fs-5 fw-medium text-white mb-4 pb-2">Entregamos tus documentos y paquetes con seguridad, rapidez y confianza a cualquier destino.</p>
+                                <a href="{% url 'registrar_pedido' %}" class="btn btn-primary py-md-3 px-md-5 me-3 animated slideInLeft">Realizar Envío</a>
+                                <a href="{% url 'rastrear_pedido' %}" class="btn btn-secondary py-md-3 px-md-5 animated slideInRight">Rastrear ahora</a>
                             </div>
                         </div>
                     </div>
@@ -50,9 +25,34 @@
     </div>
     <!-- Carousel End -->
 
+    <!-- Tracking Box Start -->
+    <div class="container-fluid wow fadeInUp" data-wow-delay="0.1s" style="margin-top: -100px; position: relative; z-index: 10;">
+        <div class="container">
+            <div class="bg-white shadow p-5">
+                <div class="row g-4 align-items-end">
+                    <div class="col-lg-12">
+                        <h4 class="mb-4">Rastrea tu envío</h4>
+                        <form action="{% url 'rastrear_pedido' %}" method="post">
+                            {% csrf_token %}
+                            <div class="row g-3">
+                                <div class="col-md-9">
+                                    <input type="text" name="numero_tracking" class="form-control form-control-lg border-primary" placeholder="Ingresa tu número de tracking (ej. RE-XXXXXX)" required>
+                                </div>
+                                <div class="col-md-3">
+                                    <button class="btn btn-primary btn-lg w-100" type="submit">Buscar Pedido</button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Tracking Box End -->
+
 
     <!-- About Start -->
-    <div class="container-fluid overflow-hidden py-5 px-lg-0">
+    <div class="container-fluid overflow-hidden py-5 px-lg-0 mt-5">
         <div class="container about py-5 px-lg-0">
             <div class="row g-5 mx-lg-0">
                 <div class="col-lg-6 ps-lg-0 wow fadeInLeft" data-wow-delay="0.1s" style="min-height: 400px;">
@@ -62,79 +62,32 @@
                 </div>
                 <div class="col-lg-6 about-text wow fadeInUp" data-wow-delay="0.3s">
                     <h6 class="text-secondary text-uppercase mb-3">Sobre Nosotros</h6>
-                    <h1 class="mb-5">Soluciones Rápidas de Transporte y Encomiendas</h1>
-                    <p class="mb-5">Somos RutaExpres, una empresa ecuatoriana dedicada a brindar soluciones logísticas integrales. Nos especializamos en el envío y recepción de encomiendas a nivel nacional, asegurando que tus paquetes lleguen a tiempo y en perfectas condiciones.</p>
+                    <h1 class="mb-5">Soluciones Logísticas Rápidas y Seguras</h1>
+                    <p class="mb-5">Conecta tus ideas, negocios y familia a través de nuestra red logística. Nos encargamos de todo el proceso para que tus paquetes lleguen a tiempo y en perfectas condiciones.</p>
                     <div class="row g-4 mb-5">
                         <div class="col-sm-6 wow fadeIn" data-wow-delay="0.5s">
                             <i class="fa fa-globe fa-3x text-primary mb-3"></i>
-                            <h5>Cobertura Nacional</h5>
-                            <p class="m-0">Llegamos a todas las provincias y ciudades principales del Ecuador.</p>
+                            <h5>Cobertura Nacional e Internacional</h5>
+                            <p class="m-0">Llegamos a cada rincón del país y del mundo.</p>
                         </div>
                         <div class="col-sm-6 wow fadeIn" data-wow-delay="0.7s">
                             <i class="fa fa-shipping-fast fa-3x text-primary mb-3"></i>
-                            <h5>Entrega a Tiempo</h5>
-                            <p class="m-0">Garantizamos la puntualidad en cada uno de nuestros envíos.</p>
+                            <h5>Entregas a Tiempo</h5>
+                            <p class="m-0">Garantizamos el cumplimiento de nuestros tiempos de entrega.</p>
                         </div>
                     </div>
-                    <a href="" class="btn btn-primary py-3 px-5">Conoce Más</a>
                 </div>
             </div>
         </div>
     </div>
     <!-- About End -->
 
-
-    <!-- Fact Start -->
-    <div class="container-xxl py-5">
-        <div class="container py-5">
-            <div class="row g-5">
-                <div class="col-lg-6 wow fadeInUp" data-wow-delay="0.1s">
-                    <h6 class="text-secondary text-uppercase mb-3">Nuestras Cifras</h6>
-                    <h1 class="mb-5">El Mejor Lugar para Gestionar sus Envíos</h1>
-                    <p class="mb-5">Con años de experiencia en el mercado ecuatoriano, hemos logrado conectar a miles de personas y empresas a lo largo y ancho del país, brindando siempre un servicio de excelencia.</p>
-                    <div class="d-flex align-items-center">
-                        <i class="fa fa-headphones fa-2x flex-shrink-0 bg-primary p-3 text-white"></i>
-                        <div class="ps-4">
-                            <h6>¿Tiene alguna consulta?</h6>
-                            <h3 class="text-primary m-0">+593 98 765 4321</h3>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-lg-6">
-                    <div class="row g-4 align-items-center">
-                        <div class="col-sm-6">
-                            <div class="bg-primary p-4 mb-4 wow fadeIn" data-wow-delay="0.3s">
-                                <i class="fa fa-users fa-2x text-white mb-3"></i>
-                                <h2 class="text-white mb-2" data-toggle="counter-up">5432</h2>
-                                <p class="text-white mb-0">Clientes Satisfechos</p>
-                            </div>
-                            <div class="bg-secondary p-4 wow fadeIn" data-wow-delay="0.5s">
-                                <i class="fa fa-ship fa-2x text-white mb-3"></i>
-                                <h2 class="text-white mb-2" data-toggle="counter-up">8765</h2>
-                                <p class="text-white mb-0">Envíos Completados</p>
-                            </div>
-                        </div>
-                        <div class="col-sm-6">
-                            <div class="bg-success p-4 wow fadeIn" data-wow-delay="0.7s">
-                                <i class="fa fa-star fa-2x text-white mb-3"></i>
-                                <h2 class="text-white mb-2" data-toggle="counter-up">4950</h2>
-                                <p class="text-white mb-0">Reseñas Positivas</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    <!-- Fact End -->
-
-
     <!-- Service Start -->
     <div class="container-xxl py-5">
         <div class="container py-5">
             <div class="text-center wow fadeInUp" data-wow-delay="0.1s">
                 <h6 class="text-secondary text-uppercase">Nuestros Servicios</h6>
-                <h1 class="mb-5">Explore Lo Que Ofrecemos</h1>
+                <h1 class="mb-5">Explora nuestras soluciones</h1>
             </div>
             <div class="row g-4">
                 <div class="col-md-6 col-lg-4 wow fadeInUp" data-wow-delay="0.3s">
@@ -142,8 +95,8 @@
                         <div class="overflow-hidden mb-4">
                             <img class="img-fluid" src="{% static 'img/service-1.jpg' %}" alt="">
                         </div>
-                        <h4 class="mb-3">Envío Nacional</h4>
-                        <p>Transportamos sus paquetes a cualquier parte del Ecuador con seguridad y eficiencia.</p>
+                        <h4 class="mb-3">Transporte Aéreo</h4>
+                        <p>La opción más rápida para tus envíos urgentes a nivel nacional e internacional.</p>
                     </div>
                 </div>
                 <div class="col-md-6 col-lg-4 wow fadeInUp" data-wow-delay="0.5s">
@@ -151,8 +104,8 @@
                         <div class="overflow-hidden mb-4">
                             <img class="img-fluid" src="{% static 'img/service-2.jpg' %}" alt="">
                         </div>
-                        <h4 class="mb-3">Seguimiento en Línea</h4>
-                        <p>Consulte el estado y la ubicación de su encomienda en tiempo real 24/7.</p>
+                        <h4 class="mb-3">Transporte Marítimo</h4>
+                        <p>Ideal para cargas grandes y pesadas con costos optimizados.</p>
                     </div>
                 </div>
                 <div class="col-md-6 col-lg-4 wow fadeInUp" data-wow-delay="0.7s">
@@ -160,100 +113,12 @@
                         <div class="overflow-hidden mb-4">
                             <img class="img-fluid" src="{% static 'img/service-3.jpg' %}" alt="">
                         </div>
-                        <h4 class="mb-3">Entrega a Domicilio</h4>
-                        <p>Facilitamos la entrega directa en la puerta de su casa o negocio.</p>
-                    </div>
-                </div>
-                <div class="col-md-6 col-lg-4 wow fadeInUp" data-wow-delay="0.3s">
-                    <div class="service-item p-4">
-                        <div class="overflow-hidden mb-4">
-                            <img class="img-fluid" src="{% static 'img/service-4.jpg' %}" alt="">
-                        </div>
-                        <h4 class="mb-3">Paquetería Empresarial</h4>
-                        <p>Soluciones logísticas diseñadas específicamente para emprendedores y empresas.</p>
-                    </div>
-                </div>
-                <div class="col-md-6 col-lg-4 wow fadeInUp" data-wow-delay="0.5s">
-                    <div class="service-item p-4">
-                        <div class="overflow-hidden mb-4">
-                            <img class="img-fluid" src="{% static 'img/service-5.jpg' %}" alt="">
-                        </div>
-                        <h4 class="mb-3">Envío Express</h4>
-                        <p>Servicio prioritario para aquellas encomiendas que necesitan llegar lo antes posible.</p>
-                    </div>
-                </div>
-                <div class="col-md-6 col-lg-4 wow fadeInUp" data-wow-delay="0.7s">
-                    <div class="service-item p-4">
-                        <div class="overflow-hidden mb-4">
-                            <img class="img-fluid" src="{% static 'img/service-6.jpg' %}" alt="">
-                        </div>
-                        <h4 class="mb-3">Carga Pesada</h4>
-                        <p>Contamos con transporte adecuado para movilizar mercancía de gran volumen y peso.</p>
+                        <h4 class="mb-3">Transporte Terrestre</h4>
+                        <p>Nuestra amplia flota de vehículos conecta todas las ciudades del país.</p>
                     </div>
                 </div>
             </div>
         </div>
     </div>
     <!-- Service End -->
-
-
-    <!-- Feature Start -->
-    <div class="container-fluid overflow-hidden py-5 px-lg-0">
-        <div class="container feature py-5 px-lg-0">
-            <div class="row g-5 mx-lg-0">
-                <div class="col-lg-6 feature-text wow fadeInUp" data-wow-delay="0.1s">
-                    <h6 class="text-secondary text-uppercase mb-3">Características</h6>
-                    <h1 class="mb-5">Su Empresa de Logística de Confianza</h1>
-                    <div class="d-flex mb-5 wow fadeInUp" data-wow-delay="0.3s">
-                        <i class="fa fa-globe text-primary fa-3x flex-shrink-0"></i>
-                        <div class="ms-4">
-                            <h5>Alcance Total</h5>
-                            <p class="mb-0">Conectamos todas las regiones del Ecuador, garantizando una logística ininterrumpida.</p>
-                        </div>
-                    </div>
-                    <div class="d-flex mb-5 wow fadeIn" data-wow-delay="0.5s">
-                        <i class="fa fa-shipping-fast text-primary fa-3x flex-shrink-0"></i>
-                        <div class="ms-4">
-                            <h5>Seguridad Garantizada</h5>
-                            <p class="mb-0">Manejamos sus paquetes con el mayor de los cuidados para evitar cualquier percance.</p>
-                        </div>
-                    </div>
-                    <div class="d-flex mb-0 wow fadeInUp" data-wow-delay="0.7s">
-                        <i class="fa fa-headphones text-primary fa-3x flex-shrink-0"></i>
-                        <div class="ms-4">
-                            <h5>Soporte 24/7</h5>
-                            <p class="mb-0">Nuestro equipo de atención al cliente está siempre disponible para ayudarle.</p>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-lg-6 pe-lg-0 wow fadeInRight" data-wow-delay="0.1s" style="min-height: 400px;">
-                    <div class="position-relative h-100">
-                        <img class="position-absolute img-fluid w-100 h-100" src="{% static 'img/feature.jpg' %}" style="object-fit: cover;" alt="">
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    <!-- Feature End -->
-
-    <!-- Rastreo Start -->
-    <div class="container-xxl py-5 bg-light">
-      <div class="container">
-        <div class="text-center wow fadeInUp" data-wow-delay="0.1s">
-          <h6 class="text-secondary text-uppercase">Rastreo de Envío</h6>
-          <h1 class="mb-5">Consulte el Estado de su Encomienda</h1>
-        </div>
-        <div class="row justify-content-center wow fadeInUp" data-wow-delay="0.3s">
-          <div class="col-lg-6">
-            <form action="{% url 'rastreo_publico' %}" method="POST" class="d-flex shadow-sm rounded">
-              {% csrf_token %}
-              <input type="text" name="numero_guia" class="form-control form-control-lg border-0 px-4" placeholder="Ingrese su número de guía" required>
-              <button type="submit" class="btn btn-primary btn-lg px-4"><i class="fa fa-search me-2"></i>Rastrear</button>
-            </form>
-          </div>
-        </div>
-      </div>
-    </div>
-    <!-- Rastreo End -->
-
 {% endblock %}

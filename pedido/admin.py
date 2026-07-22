@@ -1,29 +1,19 @@
 from django.contrib import admin
-from .models import PerfilUsuario, Ciudad, Encomienda, HistorialEstado
+from .models import Cliente, Pedido
 
-class PerfilUsuarioAdmin(admin.ModelAdmin):
-    list_display = ('usuario', 'rol', 'telefono', 'cedula')
-    list_filter = ('rol',)
-    search_fields = ('usuario__username', 'cedula')
 
-class CiudadAdmin(admin.ModelAdmin):
-    list_display = ('nombre', 'provincia', 'tarifa_base', 'activa')
-    list_filter = ('activa', 'provincia')
+@admin.register(Cliente)
+class ClienteAdmin(admin.ModelAdmin):
+    list_display = ('nombre', 'apellido', 'email', 'telefono', 'fecha_registro')
+    search_fields = ('nombre', 'apellido', 'email')
+    list_filter = ('fecha_registro',)
+    ordering = ('-fecha_registro',)
 
-class HistorialEstadoInline(admin.TabularInline):
-    model = HistorialEstado
-    extra = 0
-    readonly_fields = ('estado', 'fecha', 'comentario', 'usuario')
 
-    def has_add_permission(self, request, obj=None):
-        return False
-
-class EncomiendaAdmin(admin.ModelAdmin):
-    list_display = ('numero_guia', 'cliente', 'ciudad_destino', 'estado', 'fecha_registro')
-    list_filter = ('estado', 'fecha_registro')
-    search_fields = ('numero_guia',)
-    inlines = [HistorialEstadoInline]
-
-admin.site.register(PerfilUsuario, PerfilUsuarioAdmin)
-admin.site.register(Ciudad, CiudadAdmin)
-admin.site.register(Encomienda, EncomiendaAdmin)
+@admin.register(Pedido)
+class PedidoAdmin(admin.ModelAdmin):
+    list_display = ('numero_tracking', 'cliente', 'tipo_servicio', 'origen', 'destino', 'estado', 'fecha_creacion')
+    search_fields = ('numero_tracking', 'cliente__nombre', 'cliente__apellido', 'cliente__email')
+    list_filter = ('estado', 'tipo_servicio', 'fecha_creacion')
+    readonly_fields = ('numero_tracking', 'fecha_creacion', 'fecha_actualizacion')
+    ordering = ('-fecha_creacion',)
