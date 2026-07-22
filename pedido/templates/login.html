@@ -1,0 +1,70 @@
+{% extends './plantillaPrin.html' %}
+{% load static %}
+
+{% block contenido %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-5 col-md-7">
+            <div class="text-center mb-4 wow fadeInUp" data-wow-delay="0.1s">
+                <h6 class="text-secondary text-uppercase">Acceso</h6>
+                <h1>Iniciar Sesión</h1>
+            </div>
+            <div class="card shadow border-0 wow fadeInUp" data-wow-delay="0.2s">
+                <div class="card-body p-5">
+                    <form method="post" action="{% url 'iniciar_sesion' %}" id="formLogin" novalidate>
+                        {% csrf_token %}
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold">Nombre de usuario o Correo</label>
+                            <input type="text" name="username" id="username" class="form-control" placeholder="Ej: cliente1">
+                            <div class="text-danger small mt-1" id="errorUsername"></div>
+                        </div>
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold">Contraseña</label>
+                            <input type="password" name="password" id="password" class="form-control" placeholder="Contraseña">
+                            <div class="text-danger small mt-1" id="errorPassword"></div>
+                        </div>
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary py-3">Entrar</button>
+                        </div>
+                    </form>
+                    <div class="text-center mt-4">
+                        <p class="mb-0">¿No tienes cuenta? <a href="{% url 'registrar_cliente' %}" class="text-primary fw-semibold">Regístrate aquí</a></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.getElementById('formLogin').addEventListener('submit', function(e) {
+        let valido = true;
+
+        const username = document.getElementById('username').value.trim();
+        const errorUsername = document.getElementById('errorUsername');
+        if (!username) {
+            errorUsername.textContent = 'El usuario o correo es obligatorio.';
+            document.getElementById('username').classList.add('is-invalid');
+            valido = false;
+        } else {
+            errorUsername.textContent = '';
+            document.getElementById('username').classList.remove('is-invalid');
+        }
+
+        const password = document.getElementById('password').value;
+        const errorPassword = document.getElementById('errorPassword');
+        if (!password) {
+            errorPassword.textContent = 'La contraseña es obligatoria.';
+            document.getElementById('password').classList.add('is-invalid');
+            valido = false;
+        } else {
+            errorPassword.textContent = '';
+            document.getElementById('password').classList.remove('is-invalid');
+        }
+
+        if (!valido) e.preventDefault();
+    });
+</script>
+{% endblock %}

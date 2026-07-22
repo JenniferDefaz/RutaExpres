@@ -1,0 +1,100 @@
+{% extends './plantillaPrin.html' %}
+{% load static %}
+
+{% block contenido %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-7 col-md-9">
+
+            <!-- Encabezado -->
+            <div class="text-center mb-4 wow fadeInUp" data-wow-delay="0.1s">
+                <h6 class="text-secondary text-uppercase">Seguimiento</h6>
+                <h1>Rastrear Pedido</h1>
+            </div>
+
+            <!-- Formulario de búsqueda -->
+            <div class="card shadow-sm border-0 mb-4 wow fadeInUp" data-wow-delay="0.2s">
+                <div class="card-body p-4">
+                    <form method="post" novalidate>
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label for="{{ form.numero_tracking.id_for_label }}" class="form-label fw-semibold">
+                                Número de tracking
+                            </label>
+                            {{ form.numero_tracking }}
+                            {% if form.numero_tracking.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.numero_tracking.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fa fa-search me-2"></i>Buscar Pedido
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Resultado -->
+            {% if pedido %}
+            <div class="card shadow border-0 wow fadeInUp" data-wow-delay="0.1s">
+                <div class="card-header bg-primary text-white py-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            <i class="fa fa-box me-2"></i>{{ pedido.numero_tracking }}
+                        </h5>
+                        <span class="badge
+                            {% if pedido.estado == 'pendiente' %}bg-warning text-dark
+                            {% elif pedido.estado == 'en_transito' %}bg-info text-dark
+                            {% elif pedido.estado == 'entregado' %}bg-success
+                            {% else %}bg-danger{% endif %} fs-6">
+                            {{ pedido.get_estado_display }}
+                        </span>
+                    </div>
+                </div>
+                <div class="card-body p-4">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <p class="text-muted mb-1 small">Cliente</p>
+                            <p class="fw-semibold mb-0">{{ pedido.cliente.nombre }} {{ pedido.cliente.apellido }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p class="text-muted mb-1 small">Tipo de servicio</p>
+                            <p class="fw-semibold mb-0">{{ pedido.get_tipo_servicio_display }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p class="text-muted mb-1 small">Origen</p>
+                            <p class="fw-semibold mb-0"><i class="fa fa-map-marker-alt text-primary me-1"></i>{{ pedido.origen }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p class="text-muted mb-1 small">Destino</p>
+                            <p class="fw-semibold mb-0"><i class="fa fa-map-marker-alt text-danger me-1"></i>{{ pedido.destino }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p class="text-muted mb-1 small">Peso</p>
+                            <p class="fw-semibold mb-0">{{ pedido.peso_kg }} kg</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p class="text-muted mb-1 small">Fecha de creación</p>
+                            <p class="fw-semibold mb-0">{{ pedido.fecha_creacion|date:"d/m/Y H:i" }}</p>
+                        </div>
+                        <div class="col-12">
+                            <p class="text-muted mb-1 small">Descripción de la carga</p>
+                            <p class="fw-semibold mb-0">{{ pedido.descripcion_carga }}</p>
+                        </div>
+                    </div>
+                    <div class="mt-4 text-end">
+                        <a href="{% url 'detalle_pedido' pedido.numero_tracking %}" class="btn btn-outline-primary">
+                            <i class="fa fa-eye me-2"></i>Ver detalle completo
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+        </div>
+    </div>
+</div>
+{% endblock %}

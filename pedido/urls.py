@@ -1,15 +1,29 @@
-#1111111111111111111  Archivo para gertionar las rutas internas de la app Nomina 
-
-#IMprotar una libreria que eta dentro de Django para gestionar las rutas path es una
-# funcion que se encarga de gestionar las rutas internas de la app   
-from django.urls import path  
-#Importamos la logica de negocios de la app Nomina
-#El views es un archivo que se encarga de gestionar la logica de negocios de la app Nomina 
-#LO estamos llamando 
+from django.urls import path
 from . import views
-#Definimos las rutas internas de la app Nomina
-#Listado de rutas de la aplicacion Nomina
+
 urlpatterns = [
-    path('', views.inicio),
-    
+    # Inicio
+    path('', views.inicio, name='inicio'),
+    path('inicio/', views.inicio, name='inicio_home'),
+
+    # Autenticación
+    path('login/', views.iniciar_sesion, name='iniciar_sesion'),
+    path('logout/', views.cerrar_sesion, name='cerrar_sesion'),
+
+    # Clientes
+    path('clientes/registrar/', views.registrar_cliente, name='registrar_cliente'),
+
+    # Pedidos — rutas específicas PRIMERO, luego las dinámicas
+    path('pedidos/', views.lista_pedidos, name='lista_pedidos'),
+    path('pedidos/registrar/', views.registrar_pedido, name='registrar_pedido'),
+    path('pedidos/rastrear/', views.rastrear_pedido, name='rastrear_pedido'),
+    path('pedidos/<str:tracking>/pdf/', views.descargar_orden_pdf, name='descargar_orden_pdf'),
+    path('pedidos/<str:tracking>/asignar/', views.asignar_despachador, name='asignar_despachador'),
+    path('pedidos/<str:tracking>/', views.detalle_pedido, name='detalle_pedido'),
+
+    # Panel cliente
+    path('panel/', views.panel_cliente, name='panel_cliente'),
+
+    # Reporte
+    path('reporte/', views.reporte_global, name='reporte_global'),
 ]
