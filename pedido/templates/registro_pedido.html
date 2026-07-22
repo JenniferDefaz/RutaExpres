@@ -1,0 +1,274 @@
+{% extends './plantillaPrin.html' %}
+{% load static %}
+
+{% block contenido %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8 col-md-10">
+
+            <!-- Encabezado -->
+            <div class="text-center mb-4 wow fadeInUp" data-wow-delay="0.1s">
+                <h6 class="text-secondary text-uppercase">Pedidos</h6>
+                <h1>Registrar Nuevo Pedido</h1>
+            </div>
+
+            <!-- Formulario -->
+            <div class="card shadow-sm border-0 wow fadeInUp" data-wow-delay="0.2s">
+                <div class="card-body p-4 p-md-5">
+                    <form method="post" enctype="multipart/form-data" novalidate id="form-pedido">
+                        {% csrf_token %}
+
+                        <!-- Cliente -->
+                        {% if 'cliente' in form.fields %}
+                        <div class="mb-3">
+                            <label for="{{ form.cliente.id_for_label }}" class="form-label fw-semibold">
+                                Cliente <span class="text-danger">*</span>
+                            </label>
+                            {{ form.cliente }}
+                            {% if form.cliente.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.cliente.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+
+                        <!-- Destinatario -->
+                        <div class="mb-3">
+                            <label for="{{ form.destinatario.id_for_label }}" class="form-label fw-semibold">
+                                Nombre del destinatario <span class="text-danger">*</span>
+                            </label>
+                            {{ form.destinatario }}
+                            {% if form.destinatario.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.destinatario.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Tipo de servicio -->
+                        <div class="mb-3">
+                            <label for="{{ form.tipo_servicio.id_for_label }}" class="form-label fw-semibold">
+                                Tipo de servicio <span class="text-danger">*</span>
+                            </label>
+                            {{ form.tipo_servicio }}
+                            {% if form.tipo_servicio.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.tipo_servicio.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Origen / Destino -->
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.origen.id_for_label }}" class="form-label fw-semibold">
+                                    Origen <span class="text-danger">*</span>
+                                </label>
+                                {{ form.origen }}
+                                {% if form.origen.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.origen.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.destino.id_for_label }}" class="form-label fw-semibold">
+                                    Destino <span class="text-danger">*</span>
+                                </label>
+                                {{ form.destino }}
+                                {% if form.destino.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.destino.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Descripción de la carga -->
+                        <div class="mb-3">
+                            <label for="{{ form.descripcion_carga.id_for_label }}" class="form-label fw-semibold">
+                                Descripción de la carga <span class="text-danger">*</span>
+                            </label>
+                            {{ form.descripcion_carga }}
+                            {% if form.descripcion_carga.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.descripcion_carga.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Peso con cotización automática -->
+                        <div class="mb-3">
+                            <label for="{{ form.peso_kg.id_for_label }}" class="form-label fw-semibold">
+                                Peso (kg) <span class="text-danger">*</span>
+                            </label>
+                            {{ form.peso_kg }}
+                            {% if form.peso_kg.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.peso_kg.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                            <!-- Cotización automática -->
+                            <div class="alert alert-info mt-2 py-2 px-3" id="cotizacion-box" style="display:none;">
+                                <i class="fa fa-dollar-sign me-1"></i>
+                                Precio estimado de envío: <strong id="precio-estimado">$0.00</strong>
+                                <small class="text-muted ms-2">(tarifa: ${{ tarifa_por_kg }}/kg)</small>
+                            </div>
+                        </div>
+
+                        <!-- Foto del producto -->
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Foto del producto (opcional)</label>
+                            <input type="file" name="foto_producto" id="id_foto_producto" class="form-control">
+                        </div>
+
+                        <!-- Método de pago -->
+                        <div class="mb-3">
+                            <label for="{{ form.metodo_pago.id_for_label }}" class="form-label fw-semibold">
+                                Método de pago
+                            </label>
+                            {{ form.metodo_pago }}
+                        </div>
+
+                        <!-- Comprobante de pago -->
+                        <div class="mb-4" id="comprobante-box">
+                            <label class="form-label fw-semibold">Comprobante de pago (opcional)</label>
+                            <input type="file" name="comprobante_pago" id="id_comprobante_pago" class="form-control">
+                            <div class="form-text text-muted">Si pagó por transferencia, adjunte el comprobante.</div>
+                        </div>
+                        <!-- Estado -->
+                        {% if 'estado' in form.fields %}
+                        <div class="mb-4">
+                            <label for="{{ form.estado.id_for_label }}" class="form-label fw-semibold">
+                                Estado <span class="text-danger">*</span>
+                            </label>
+                            {{ form.estado }}
+                            {% if form.estado.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.estado.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+
+                        <!-- Errores globales -->
+                        {% if form.non_field_errors %}
+                            <div class="alert alert-danger" role="alert">
+                                {% for error in form.non_field_errors %}
+                                    <p class="mb-0">{{ error }}</p>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a href="{% url 'inicio' %}" class="btn btn-outline-secondary px-4">Cancelar</a>
+                            <button type="submit" class="btn btn-primary px-5">
+                                <i class="fa fa-box me-2"></i>Registrar Pedido
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    $(document).ready(function() {
+
+        // Cotización automática al escribir el peso
+        const tarifaKg = {{ tarifa_por_kg }};
+        document.getElementById('id_peso_kg').addEventListener('input', function() {
+            const peso = parseFloat(this.value);
+            const box = document.getElementById('cotizacion-box');
+            const precio = document.getElementById('precio-estimado');
+            if (!isNaN(peso) && peso > 0) {
+                precio.textContent = '$' + (peso * tarifaKg).toFixed(2);
+                box.style.display = 'block';
+            } else {
+                box.style.display = 'none';
+            }
+        });
+
+        // FileInput para foto del producto — Django genera id_foto_producto
+        $("#id_foto_producto").fileinput({
+            language: "es",
+            allowedFileExtensions: ["png", "jpg", "jpeg", "webp"],
+            showCaption: true,
+            dropZoneEnabled: false,
+            showClose: false,
+            browseLabel: "Seleccionar foto...",
+            removeLabel: "Quitar",
+            showUpload: false,
+            maxFileSize: 5120,
+            previewFileType: "image"
+        });
+
+        // FileInput para comprobante — Django genera id_comprobante_pago
+        $("#id_comprobante_pago").fileinput({
+            language: "es",
+            allowedFileExtensions: ["png", "jpg", "jpeg", "pdf"],
+            showCaption: true,
+            dropZoneEnabled: false,
+            showClose: false,
+            browseLabel: "Seleccionar comprobante...",
+            removeLabel: "Quitar",
+            showUpload: false,
+            maxFileSize: 5120
+        });
+
+    });
+
+    // Validaciones JS
+    document.getElementById('form-pedido').addEventListener('submit', function(e) {
+        let valido = true;
+
+        document.querySelectorAll('.js-error').forEach(el => el.remove());
+        document.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
+
+        function mostrarError(inputId, mensaje) {
+            const input = document.getElementById(inputId);
+            if (!input) return;
+            input.classList.add('is-invalid');
+            const div = document.createElement('div');
+            div.className = 'invalid-feedback d-block js-error';
+            div.textContent = mensaje;
+            input.parentNode.appendChild(div);
+            valido = false;
+        }
+
+        const destinatario = document.getElementById('id_destinatario');
+        if (destinatario && !destinatario.value.trim())
+            mostrarError('id_destinatario', 'El nombre del destinatario es obligatorio.');
+
+        const tipoServicio = document.getElementById('id_tipo_servicio');
+        if (tipoServicio && !tipoServicio.value)
+            mostrarError('id_tipo_servicio', 'Seleccione el tipo de servicio.');
+
+        const origen = document.getElementById('id_origen');
+        if (origen && !origen.value.trim())
+            mostrarError('id_origen', 'El origen es obligatorio.');
+
+        const destino = document.getElementById('id_destino');
+        if (destino && !destino.value.trim())
+            mostrarError('id_destino', 'El destino es obligatorio.');
+
+        if (origen && destino && origen.value.trim().toLowerCase() === destino.value.trim().toLowerCase())
+            mostrarError('id_destino', 'El origen y el destino no pueden ser iguales.');
+
+        const descripcion = document.getElementById('id_descripcion_carga');
+        if (descripcion && !descripcion.value.trim())
+            mostrarError('id_descripcion_carga', 'La descripción de la carga es obligatoria.');
+
+        const peso = parseFloat(document.getElementById('id_peso_kg')?.value);
+        if (isNaN(peso) || peso <= 0)
+            mostrarError('id_peso_kg', 'El peso debe ser mayor que cero.');
+
+        if (!valido) e.preventDefault();
+    });
+</script>
+{% endblock %}
