@@ -48,7 +48,7 @@
     <div class="header{% if not is_pdf %} row align-items-center pb-3 mb-4{% endif %}" style="{% if not is_pdf %}border-bottom: 3px solid #06A3DA;{% endif %}">
         {% if is_pdf %}
         <div class="header-left">
-            <h2 style="color: #06A3DA; margin: 0;">RutaExpres</h2>
+            <img src="{% static 'img/logo.png' %}" alt="RutaExpres" style="height: 40px; margin-bottom: 10px;">
             <p style="margin: 2px 0;">Servicio de Encomiendas</p>
             <small>Av. Principal s/n | Tel: (02) 123-4567<br>Email: info@rutaexpres.com</small>
         </div>
@@ -58,7 +58,7 @@
         </div>
         {% else %}
         <div class="col-6">
-            <h2 class="text-primary mb-0">RutaExpres</h2>
+            <img src="{% static 'img/logo.png' %}" alt="RutaExpres" style="height: 45px; margin-bottom: 5px;">
             <p class="text-muted mb-0">Servicio de Encomiendas</p>
             <small>Av. Principal s/n | Tel: (02) 123-4567<br>Email: info@rutaexpres.com</small>
         </div>
