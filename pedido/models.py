@@ -112,6 +112,14 @@ class Pedido(models.Model):
         verbose_name='Comprobante de pago'
     )
     pago_confirmado = models.BooleanField(default=False, verbose_name='Pago confirmado')
+    despachador = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True, blank=True,
+        related_name='pedidos_asignados',
+        verbose_name='Despachador asignado',
+        limit_choices_to={'groups__name': 'Despachador'}
+    )
     fecha_creacion = models.DateTimeField(auto_now_add=True, verbose_name='Fecha de creación')
     fecha_actualizacion = models.DateTimeField(auto_now=True, verbose_name='Última actualización')
 

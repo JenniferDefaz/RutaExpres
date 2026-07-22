@@ -11,6 +11,9 @@
             <h1 class="mb-0">
                 {% if es_secretario %}Panel de Secretaría{% elif es_despachador %}Panel de Despacho{% else %}Panel de Administración{% endif %}
             </h1>
+            {% if es_despachador %}
+            <p class="text-muted mb-0">Mostrando solo los pedidos asignados a ti.</p>
+            {% endif %}
         </div>
         <div class="d-flex gap-2">
             {% if es_secretario %}
@@ -35,9 +38,7 @@
                 <select name="estado" class="form-select w-auto" onchange="this.form.submit()">
                     <option value="">Todos los pedidos</option>
                     {% for valor, etiqueta in estado_choices %}
-                        <option value="{{ valor }}" {% if estado_filtro == valor %}selected{% endif %}>
-                            {{ etiqueta }}
-                        </option>
+                        <option value="{{ valor }}" {% if estado_filtro == valor %}selected{% endif %}>{{ etiqueta }}</option>
                     {% endfor %}
                 </select>
                 {% if estado_filtro %}
@@ -60,9 +61,9 @@
                             <th class="ps-4">Tracking</th>
                             <th>Cliente</th>
                             <th>Servicio</th>
-                            <th>Origen</th>
-                            <th>Destino</th>
+                            <th>Origen → Destino</th>
                             <th>Peso (kg)</th>
+                            {% if es_secretario %}<th>Despachador</th>{% endif %}
                             <th>Estado</th>
                             <th>Fecha</th>
                             <th class="text-center pe-4">Acciones</th>
@@ -74,9 +75,31 @@
                             <td class="ps-4 fw-semibold text-primary">{{ pedido.numero_tracking }}</td>
                             <td>{{ pedido.cliente.nombre }} {{ pedido.cliente.apellido }}</td>
                             <td>{{ pedido.get_tipo_servicio_display }}</td>
-                            <td>{{ pedido.origen }}</td>
-                            <td>{{ pedido.destino }}</td>
-                            <td>{{ pedido.peso_kg }}</td>
+                            <td>
+                                <i class="fa fa-map-marker-alt text-primary me-1"></i>{{ pedido.origen }}
+                                <i class="fa fa-arrow-right mx-1 text-muted"></i>
+                                <i class="fa fa-map-marker-alt text-danger me-1"></i>{{ pedido.destino }}
+                            </td>
+                            <td>{{ pedido.peso_kg }} kg</td>
+
+                            {% if es_secretario %}
+                            <!-- Asignar despachador -->
+                            <td>
+                                <form method="post" action="{% url 'asignar_despachador' pedido.numero_tracking %}">
+                                    {% csrf_token %}
+                                    <select name="despachador_id" class="form-select form-select-sm" style="min-width:130px" onchange="this.form.submit()">
+                                        <option value="">Sin asignar</option>
+                                        {% for d in despachadores %}
+                                            <option value="{{ d.pk }}" {% if pedido.despachador == d %}selected{% endif %}>
+                                                {{ d.get_full_name|default:d.username }}
+                                            </option>
+                                        {% endfor %}
+                                    </select>
+                                </form>
+                            </td>
+                            {% endif %}
+
+                            <!-- Cambio de estado -->
                             <td>
                                 <form method="post" action="{% url 'lista_pedidos' %}" class="d-flex align-items-center gap-1">
                                     {% csrf_token %}
@@ -102,17 +125,16 @@
                                     </select>
                                 </form>
                             </td>
+
                             <td>{{ pedido.fecha_creacion|date:"d/m/Y" }}</td>
                             <td class="text-center pe-4">
                                 <a href="{% url 'detalle_pedido' pedido.numero_tracking %}"
-                                   class="btn btn-sm btn-outline-primary"
-                                   title="Ver detalle">
+                                   class="btn btn-sm btn-outline-primary" title="Ver detalle">
                                     <i class="fa fa-eye"></i>
                                 </a>
                                 <a href="{% url 'descargar_orden_pdf' pedido.numero_tracking %}"
                                    target="_blank"
-                                   class="btn btn-sm btn-outline-danger ms-1"
-                                   title="Descargar PDF">
+                                   class="btn btn-sm btn-outline-danger ms-1" title="Descargar PDF">
                                     <i class="fa fa-file-pdf"></i>
                                 </a>
                                 {% if es_secretario %}
@@ -130,7 +152,7 @@
                                         <i class="fa fa-check"></i> Pagado
                                     </span>
                                     {% else %}
-                                    <span class="badge bg-danger ms-1" title="Pedido cancelado">
+                                    <span class="badge bg-danger ms-1" title="Cancelado">
                                         <i class="fa fa-ban"></i>
                                     </span>
                                     {% endif %}
@@ -147,11 +169,10 @@
             {% else %}
             <div class="text-center py-5">
                 <i class="fa fa-inbox fa-3x text-muted mb-3"></i>
-                <h5 class="text-muted">No se encontraron pedidos</h5>
-                {% if estado_filtro %}
-                    <p class="text-muted">No hay pedidos con estado "{{ estado_filtro }}".</p>
-                    <a href="{% url 'lista_pedidos' %}" class="btn btn-outline-primary">Ver todos</a>
-                {% else %}
+                <h5 class="text-muted">
+                    {% if es_despachador %}No tienes pedidos asignados.{% else %}No se encontraron pedidos.{% endif %}
+                </h5>
+                {% if not es_despachador %}
                     <a href="{% url 'registrar_pedido' %}" class="btn btn-primary">Registrar primer pedido</a>
                 {% endif %}
             </div>
@@ -172,7 +193,7 @@
         },
         language: dtEspanol,
         columnDefs: [
-            { orderable: false, targets: [6, 8] }
+            { orderable: false, targets: [-1] }
         ]
     });
 </script>

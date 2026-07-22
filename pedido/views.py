@@ -252,47 +252,58 @@ def lista_pedidos(request):
         messages.error(request, 'No tienes permisos para acceder al Panel.')
         return redirect('panel_cliente')
 
-    # Solo secretario puede confirmar pago
     if request.method == 'POST':
         pedido_id = request.POST.get('pedido_id')
         nuevo_estado = request.POST.get('nuevo_estado')
         confirmar_pago = request.POST.get('confirmar_pago')
         estados_validos = [e[0] for e in Pedido.ESTADO_CHOICES]
-
-        # Despachador solo puede cambiar a en_transito o entregado
         estados_despachador = ['en_transito', 'entregado']
 
         if pedido_id:
             try:
                 pedido = Pedido.objects.select_related('cliente').get(pk=pedido_id)
 
-                # Confirmar pago (solo secretario)
-                if confirmar_pago and es_secretario:
+                # Despachador solo puede cambiar SUS pedidos asignados
+                if es_despachador and pedido.despachador != request.user:
+                    messages.error(request, 'No tienes permiso para modificar este pedido.')
+                elif confirmar_pago and es_secretario:
                     pedido.pago_confirmado = True
                     pedido.save()
                     messages.success(request, f'Pago confirmado para el pedido {pedido.numero_tracking}.')
-
-                # Cambiar estado
                 elif nuevo_estado in estados_validos:
                     if es_despachador and nuevo_estado not in estados_despachador:
-                        messages.error(request, 'El despachador solo puede cambiar a En Tránsito o Entregado.')
+                        messages.error(request, 'Solo puedes cambiar a En Tránsito o Entregado.')
                     else:
                         estado_anterior = pedido.estado
                         pedido.estado = nuevo_estado
                         pedido.save()
                         if nuevo_estado == 'entregado' and estado_anterior != 'entregado':
                             _enviar_notificacion_entrega(pedido)
-                        messages.success(request, f'Estado del pedido {pedido.numero_tracking} actualizado a "{pedido.get_estado_display()}".')
+                        messages.success(request, f'Estado de {pedido.numero_tracking} actualizado a "{pedido.get_estado_display()}".')
                 else:
-                    messages.error(request, 'Datos de actualización inválidos.')
+                    messages.error(request, 'Datos inválidos.')
             except Pedido.DoesNotExist:
                 messages.error(request, 'Pedido no encontrado.')
         return redirect('lista_pedidos')
 
     estado_filtro = request.GET.get('estado', '')
-    pedidos = Pedido.objects.select_related('cliente').all()
+
+    # Despachador solo ve SUS pedidos asignados
+    if es_despachador:
+        pedidos = Pedido.objects.select_related('cliente').filter(despachador=request.user)
+    else:
+        pedidos = Pedido.objects.select_related('cliente').all()
+
     if estado_filtro:
         pedidos = pedidos.filter(estado=estado_filtro)
+
+    # Lista de despachadores disponibles para el secretario
+    despachadores = []
+    if es_secretario:
+        from django.contrib.auth.models import Group
+        grupo = Group.objects.filter(name='Despachador').first()
+        if grupo:
+            despachadores = grupo.user_set.all()
 
     return render(request, 'lista_pedidos.html', {
         'pedidos': pedidos,
@@ -300,6 +311,7 @@ def lista_pedidos(request):
         'estado_choices': Pedido.ESTADO_CHOICES,
         'es_secretario': es_secretario,
         'es_despachador': es_despachador,
+        'despachadores': despachadores,
     })
 
 
@@ -477,6 +489,33 @@ def _generar_pdf_pedido(pedido):
     doc.build(elementos, onFirstPage=draw_border, onLaterPages=draw_border)
     buffer.seek(0)
     return buffer.read()
+
+
+@login_required(login_url='iniciar_sesion')
+def asignar_despachador(request, tracking):
+    """Solo el secretario puede asignar un despachador a un pedido."""
+    es_secretario = request.user.groups.filter(name='Secretario').exists() or request.user.is_staff
+    if not es_secretario:
+        messages.error(request, 'Solo el Secretario puede asignar despachadores.')
+        return redirect('lista_pedidos')
+
+    pedido = get_object_or_404(Pedido, numero_tracking=tracking)
+
+    if request.method == 'POST':
+        despachador_id = request.POST.get('despachador_id')
+        if despachador_id:
+            try:
+                despachador = User.objects.get(pk=despachador_id, groups__name='Despachador')
+                pedido.despachador = despachador
+                pedido.save()
+                messages.success(request, f'Pedido {tracking} asignado a {despachador.get_full_name() or despachador.username}.')
+            except User.DoesNotExist:
+                messages.error(request, 'Despachador no válido.')
+        else:
+            pedido.despachador = None
+            pedido.save()
+            messages.success(request, f'Pedido {tracking} sin despachador asignado.')
+    return redirect('lista_pedidos')
 
 
 @login_required(login_url='iniciar_sesion')
