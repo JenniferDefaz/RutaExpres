@@ -244,50 +244,53 @@ def detalle_pedido(request, tracking):
 
 @login_required(login_url='iniciar_sesion')
 def lista_pedidos(request):
-    """
-    Vista para listar todos los pedidos (Secretario, Despachador o staff).
-    Permite filtrar por estado y actualizar el estado de un pedido.
-    """
-    es_rol_interno = (
-        request.user.groups.filter(name__in=['Secretario', 'Despachador']).exists()
-        or request.user.is_staff
-    )
+    es_secretario = request.user.groups.filter(name='Secretario').exists() or request.user.is_staff
+    es_despachador = request.user.groups.filter(name='Despachador').exists()
+    es_rol_interno = es_secretario or es_despachador
+
     if not es_rol_interno:
-        messages.error(request, 'No tienes permisos para acceder al Panel de Administración.')
+        messages.error(request, 'No tienes permisos para acceder al Panel.')
         return redirect('panel_cliente')
 
-    # Actualización de estado desde el panel
+    # Solo secretario puede confirmar pago
     if request.method == 'POST':
         pedido_id = request.POST.get('pedido_id')
         nuevo_estado = request.POST.get('nuevo_estado')
+        confirmar_pago = request.POST.get('confirmar_pago')
         estados_validos = [e[0] for e in Pedido.ESTADO_CHOICES]
 
-        if pedido_id and nuevo_estado in estados_validos:
+        # Despachador solo puede cambiar a en_transito o entregado
+        estados_despachador = ['en_transito', 'entregado']
+
+        if pedido_id:
             try:
                 pedido = Pedido.objects.select_related('cliente').get(pk=pedido_id)
-                estado_anterior = pedido.estado
-                pedido.estado = nuevo_estado
-                pedido.save()
 
-                # Si pasó a "entregado", notificar al cliente
-                if nuevo_estado == 'entregado' and estado_anterior != 'entregado':
-                    _enviar_notificacion_entrega(pedido)
+                # Confirmar pago (solo secretario)
+                if confirmar_pago and es_secretario:
+                    pedido.pago_confirmado = True
+                    pedido.save()
+                    messages.success(request, f'Pago confirmado para el pedido {pedido.numero_tracking}.')
 
-                messages.success(
-                    request,
-                    f'Estado del pedido {pedido.numero_tracking} actualizado a '
-                    f'"{pedido.get_estado_display()}".'
-                )
+                # Cambiar estado
+                elif nuevo_estado in estados_validos:
+                    if es_despachador and nuevo_estado not in estados_despachador:
+                        messages.error(request, 'El despachador solo puede cambiar a En Tránsito o Entregado.')
+                    else:
+                        estado_anterior = pedido.estado
+                        pedido.estado = nuevo_estado
+                        pedido.save()
+                        if nuevo_estado == 'entregado' and estado_anterior != 'entregado':
+                            _enviar_notificacion_entrega(pedido)
+                        messages.success(request, f'Estado del pedido {pedido.numero_tracking} actualizado a "{pedido.get_estado_display()}".')
+                else:
+                    messages.error(request, 'Datos de actualización inválidos.')
             except Pedido.DoesNotExist:
                 messages.error(request, 'Pedido no encontrado.')
-        else:
-            messages.error(request, 'Datos de actualización inválidos.')
-
         return redirect('lista_pedidos')
 
     estado_filtro = request.GET.get('estado', '')
     pedidos = Pedido.objects.select_related('cliente').all()
-
     if estado_filtro:
         pedidos = pedidos.filter(estado=estado_filtro)
 
@@ -295,6 +298,8 @@ def lista_pedidos(request):
         'pedidos': pedidos,
         'estado_filtro': estado_filtro,
         'estado_choices': Pedido.ESTADO_CHOICES,
+        'es_secretario': es_secretario,
+        'es_despachador': es_despachador,
     })
 
 
@@ -476,14 +481,11 @@ def _generar_pdf_pedido(pedido):
 
 @login_required(login_url='iniciar_sesion')
 def reporte_global(request):
-    """Reporte global solo para Secretario, Despachador o staff."""
-    es_rol_interno = (
-        request.user.groups.filter(name__in=['Secretario', 'Despachador']).exists()
-        or request.user.is_staff
-    )
-    if not es_rol_interno:
-        messages.error(request, 'No tienes permisos para ver el reporte.')
-        return redirect('panel_cliente')
+    """Reporte global solo para Secretario o staff — NO para Despachador."""
+    es_secretario = request.user.groups.filter(name='Secretario').exists() or request.user.is_staff
+    if not es_secretario:
+        messages.error(request, 'Solo el Secretario puede acceder al reporte financiero.')
+        return redirect('lista_pedidos')
 
     pedidos = Pedido.objects.select_related('cliente').all()
     total = pedidos.count()

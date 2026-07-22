@@ -63,9 +63,14 @@
             <div class="navbar-nav ms-auto p-4 p-lg-0">
                 <a href="{% url 'inicio' %}" class="nav-item nav-link">Inicio</a>
                 {% if user.is_authenticated %}
-                    {% if user.is_staff or es_rol_interno %}
+                    {% if es_secretario %}
                         <a href="{% url 'lista_pedidos' %}" class="nav-item nav-link">Panel Admin</a>
-                        <a href="{% url 'reporte_global' %}" class="nav-item nav-link">Reporte</a>
+                        <a href="{% url 'reporte_global' %}" class="nav-item nav-link">
+                            <i class="fa fa-chart-bar me-1"></i>Reporte
+                        </a>
+                        <a href="{% url 'registrar_cliente' %}" class="nav-item nav-link">Registrar Cliente</a>
+                    {% elif es_despachador %}
+                        <a href="{% url 'lista_pedidos' %}" class="nav-item nav-link">Panel Despacho</a>
                     {% else %}
                         <a href="{% url 'panel_cliente' %}" class="nav-item nav-link">Mi Panel</a>
                     {% endif %}
