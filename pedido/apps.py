@@ -5,5 +5,3 @@ class PedidoConfig(AppConfig):
     name = 'pedido'
     verbose_name = 'Gestión de Encomiendas'
 
-    def ready(self):
-        import pedido.signals  # noqa: F401
