@@ -112,7 +112,7 @@
                                     <i class="fa fa-file-pdf"></i>
                                 </a>
                                 {% if es_secretario %}
-                                    {% if not pedido.pago_confirmado %}
+                                    {% if not pedido.pago_confirmado and pedido.estado != 'cancelado' %}
                                     <form method="post" action="{% url 'lista_pedidos' %}" class="d-inline ms-1">
                                         {% csrf_token %}
                                         <input type="hidden" name="pedido_id" value="{{ pedido.pk }}">
@@ -121,9 +121,13 @@
                                             <i class="fa fa-dollar-sign"></i>
                                         </button>
                                     </form>
-                                    {% else %}
+                                    {% elif pedido.pago_confirmado %}
                                     <span class="badge bg-success ms-1" title="Pago confirmado">
                                         <i class="fa fa-check"></i> Pagado
+                                    </span>
+                                    {% else %}
+                                    <span class="badge bg-danger ms-1" title="Pedido cancelado">
+                                        <i class="fa fa-ban"></i>
                                     </span>
                                     {% endif %}
                                 {% endif %}
