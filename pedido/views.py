@@ -14,6 +14,13 @@ import base64
 from .models import Cliente, Pedido
 from .forms import ClienteForm, PedidoForm, BuscarPedidoForm
 
+from reportlab.lib.pagesizes import letter
+from reportlab.lib.units import mm
+from reportlab.lib import colors
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib.enums import TA_CENTER, TA_RIGHT
+
 
 def _get_or_create_group(name):
     group, _ = Group.objects.get_or_create(name=name)
@@ -68,20 +75,109 @@ def _enviar_bienvenida(cliente):
     except Exception:
         pass
 
+def _generar_factura_pdf(pedido):
+    """Genera la factura del pedido en PDF y devuelve los bytes."""
+    buffer = io.BytesIO()
+    doc = SimpleDocTemplate(
+        buffer, pagesize=letter,
+        topMargin=20 * mm, bottomMargin=20 * mm,
+        leftMargin=20 * mm, rightMargin=20 * mm,
+    )
+    styles = getSampleStyleSheet()
+    titulo_style = ParagraphStyle(
+        'TituloFactura', parent=styles['Title'], textColor=colors.HexColor('#CE1212'),
+        fontSize=22, alignment=TA_CENTER, spaceAfter=2,
+    )
+    subtitulo_style = ParagraphStyle(
+        'Subtitulo', parent=styles['Normal'], textColor=colors.HexColor('#555555'),
+        fontSize=10, alignment=TA_CENTER, spaceAfter=14,
+    )
+    tracking_style = ParagraphStyle(
+        'Tracking', parent=styles['Normal'], textColor=colors.HexColor('#CE1212'),
+        fontSize=13, alignment=TA_RIGHT, spaceAfter=4, fontName='Helvetica-Bold',
+    )
+    seccion_style = ParagraphStyle(
+        'Seccion', parent=styles['Heading2'], textColor=colors.HexColor('#1F1F1F'),
+        fontSize=12, spaceBefore=14, spaceAfter=6,
+    )
+
+    story = []
+    story.append(Paragraph('RutaExpres', titulo_style))
+    story.append(Paragraph('Centro de Soluciones Logísticas &middot; FACTURA / COMPROBANTE DE ENVÍO', subtitulo_style))
+    story.append(Paragraph(f'Guía N°: {pedido.numero_tracking}', tracking_style))
+    story.append(Paragraph(
+        f'Fecha: {pedido.fecha_creacion.strftime("%d/%m/%Y %H:%M")}',
+        ParagraphStyle('Fecha', parent=styles['Normal'], alignment=TA_RIGHT, fontSize=9, textColor=colors.grey)
+    ))
+
+    story.append(Paragraph('Datos del cliente', seccion_style))
+    datos_cliente = [
+        ['Nombre:', f'{pedido.cliente.nombre} {pedido.cliente.apellido}'],
+        ['Correo:', pedido.cliente.email],
+        ['Teléfono:', pedido.cliente.telefono],
+        ['Dirección:', pedido.cliente.direccion],
+    ]
+    tabla_cliente = Table(datos_cliente, colWidths=[35 * mm, 130 * mm])
+    tabla_cliente.setStyle(TableStyle([
+        ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
+        ('FONTSIZE', (0, 0), (-1, -1), 9.5),
+        ('TEXTCOLOR', (0, 0), (0, -1), colors.HexColor('#888888')),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
+    ]))
+    story.append(tabla_cliente)
+
+    story.append(Paragraph('Detalle del envío', seccion_style))
+    precio_texto = f'${pedido.precio_envio}' if pedido.precio_envio else 'Por calcular'
+    datos_envio = [
+        ['Destinatario:', pedido.destinatario],
+        ['Tipo de servicio:', pedido.get_tipo_servicio_display()],
+        ['Origen:', pedido.origen],
+        ['Destino:', pedido.destino],
+        ['Peso:', f'{pedido.peso_kg} kg'],
+        ['Descripción de carga:', pedido.descripcion_carga],
+        ['Estado:', pedido.get_estado_display()],
+    ]
+    tabla_envio = Table(datos_envio, colWidths=[45 * mm, 120 * mm])
+    tabla_envio.setStyle(TableStyle([
+        ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
+        ('FONTSIZE', (0, 0), (-1, -1), 9.5),
+        ('TEXTCOLOR', (0, 0), (0, -1), colors.HexColor('#888888')),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
+        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+    ]))
+    story.append(tabla_envio)
+
+    story.append(Spacer(1, 14))
+    tabla_total = Table([['TOTAL A PAGAR', precio_texto]], colWidths=[135 * mm, 30 * mm])
+    tabla_total.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor('#1F1F1F')),
+        ('TEXTCOLOR', (0, 0), (-1, -1), colors.white),
+        ('FONTNAME', (0, 0), (-1, -1), 'Helvetica-Bold'),
+        ('FONTSIZE', (0, 0), (-1, -1), 11),
+        ('ALIGN', (1, 0), (1, 0), 'RIGHT'),
+        ('TOPPADDING', (0, 0), (-1, -1), 10),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 10),
+        ('LEFTPADDING', (0, 0), (-1, -1), 12),
+        ('RIGHTPADDING', (0, 0), (-1, -1), 12),
+    ]))
+    story.append(tabla_total)
+
+    story.append(Spacer(1, 30))
+    story.append(Paragraph(
+        'RutaExpres &middot; Tel: +593 2 345 6789 &middot; info@rutaexpres.com.ec',
+        ParagraphStyle('Footer', parent=styles['Normal'], alignment=TA_CENTER, fontSize=8, textColor=colors.grey)
+    ))
+
+    doc.build(story)
+    buffer.seek(0)
+    return buffer.getvalue()
 
 def _enviar_confirmacion_pedido(pedido):
     """Correo #2 — Confirmación de pedido con QR de tracking (HTML)."""
     try:
         url_rastreo = f'http://127.0.0.1:8000/pedidos/{pedido.numero_tracking}/'
         precio_texto = f'${pedido.precio_envio}' if pedido.precio_envio else 'Por calcular'
-        qr_b64 = _generar_qr_base64(url_rastreo)
-        qr_html = (
-            f'<div style="text-align:center;margin:20px 0;">'
-            f'<img src="data:image/png;base64,{qr_b64}" width="160" height="160" '
-            f'alt="QR" style="border:2px solid #CE1212;border-radius:8px;padding:6px;"/>'
-            f'<p style="color:#888;font-size:12px;margin-top:8px;">Escanea para rastrear tu pedido</p>'
-            f'</div>'
-        ) if qr_b64 else ''
+        
         asunto = f'[RutaExpres] Pedido registrado — Tracking: {pedido.numero_tracking}'
         texto = (
             f'Hola {pedido.cliente.nombre},\n\nTracking: {pedido.numero_tracking}\n'
@@ -108,7 +204,6 @@ def _enviar_confirmacion_pedido(pedido):
 <tr><td style="padding:6px 0;color:#888;">Fecha</td><td style="color:#333;">{pedido.fecha_creacion.strftime('%d/%m/%Y %H:%M')}</td></tr>
 </table>
 </div>
-{qr_html}
 <div style="text-align:center;margin:24px 0;">
 <a href="{url_rastreo}" style="background:#CE1212;color:#fff;padding:14px 36px;border-radius:6px;text-decoration:none;font-weight:bold;">Rastrear mi pedido &#8594;</a>
 </div>
@@ -118,9 +213,13 @@ def _enviar_confirmacion_pedido(pedido):
         email = EmailMultiAlternatives(subject=asunto, body=texto,
                                        from_email=settings.DEFAULT_FROM_EMAIL, to=[pedido.cliente.email])
         email.attach_alternative(html, 'text/html')
+
+        pdf_bytes = _generar_factura_pdf(pedido)
+        email.attach(f'Factura_{pedido.numero_tracking}.pdf', pdf_bytes, 'application/pdf')
+
         email.send(fail_silently=True)
-    except Exception:
-        pass
+    except Exception as e:
+        print(f'Error enviando confirmación de pedido: {e}')
 
 
 def _enviar_notificacion_entrega(pedido):

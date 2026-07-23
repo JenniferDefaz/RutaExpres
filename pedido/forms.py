@@ -61,8 +61,7 @@ class ClienteForm(forms.ModelForm):
             raise forms.ValidationError('El apellido no puede estar vacío.')
         if len(valor) < 2:
             raise forms.ValidationError('El apellido debe tener al menos 2 caracteres.')
-        return valord
-
+        return valor
     def clean_email(self):
         email = self.cleaned_data['email'].strip()
         usuario, _, dominio = email.partition('@')
