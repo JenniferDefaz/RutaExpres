@@ -1,0 +1,147 @@
+{% extends './plantillaPrin.html' %}
+{% load static %}
+
+{% block contenido %}
+<div class="container-fluid py-4 px-lg-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold text-primary mb-1"><i class="fa fa-truck me-2"></i>Panel de Despacho</h2>
+            <p class="text-muted mb-0">Gestión de encomiendas asignadas a tu ruta de reparto</p>
+        </div>
+        <div>
+            <span class="badge bg-primary fs-6 px-3 py-2">
+                <i class="fa fa-user me-1"></i> Despachador: {{ request.user.get_full_name|default:request.user.username }}
+            </span>
+        </div>
+    </div>
+
+    <!-- Encomiendas Asignadas Table -->
+    <div class="card shadow-sm border-0">
+        <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
+            <h5 class="mb-0 fw-bold text-dark"><i class="fa fa-list me-2"></i>Mis Encomiendas Asignadas</h5>
+            <span class="badge bg-secondary">{{ pedidos|length }} asignadas</span>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table id="tabla-despacho" class="table table-hover align-middle w-100">
+                    <thead class="table-light">
+                        <tr>
+                            <th>N° Guía</th>
+                            <th>Remitente</th>
+                            <th>Destinatario</th>
+                            <th>Ciudad Destino</th>
+                            <th>Dirección Entrega</th>
+                            <th>Estado Actual</th>
+                            <th>Acción / Cambiar Estado</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for pedido in pedidos %}
+                        <tr>
+                            <td>
+                                <a href="{% url 'detalle_pedido' pedido.numero_guia %}" class="fw-bold text-primary">
+                                    {{ pedido.numero_guia }}
+                                </a>
+                            </td>
+                            <td>
+                                <div>{{ pedido.cliente.nombre }} {{ pedido.cliente.apellido }}</div>
+                                <small class="text-muted"><i class="fa fa-phone me-1"></i>{{ pedido.cliente.telefono }}</small>
+                            </td>
+                            <td>
+                                <div><strong>{{ pedido.nombre_destinatario }}</strong></div>
+                                <small class="text-muted"><i class="fa fa-phone me-1"></i>{{ pedido.telefono_destinatario }}</small>
+                            </td>
+                            <td>
+                                <span class="badge bg-info text-dark">
+                                    {{ pedido.ciudad_destino.nombre|default:pedido.destino }}
+                                </span>
+                            </td>
+                            <td>
+                                <small class="d-block text-wrap" style="max-width: 250px;">{{ pedido.direccion_entrega }}</small>
+                            </td>
+                            <td>
+                                {% if pedido.estado == 'ENTREGADA' %}
+                                    <span class="badge bg-success px-2 py-1"><i class="fa fa-check-circle me-1"></i>Entregada</span>
+                                {% elif pedido.estado == 'NO_ENTREGADA' %}
+                                    <span class="badge bg-danger px-2 py-1"><i class="fa fa-exclamation-triangle me-1"></i>Novedad</span>
+                                {% elif pedido.estado == 'EN_ENTREGA' %}
+                                    <span class="badge bg-warning text-dark px-2 py-1"><i class="fa fa-shipping-fast me-1"></i>En Entrega</span>
+                                {% elif pedido.estado == 'EN_TRANSITO' %}
+                                    <span class="badge bg-primary px-2 py-1"><i class="fa fa-route me-1"></i>En Tránsito</span>
+                                {% elif pedido.estado == 'LLEGO_A_DESTINO' %}
+                                    <span class="badge bg-info px-2 py-1"><i class="fa fa-map-marker-alt me-1"></i>En Destino</span>
+                                {% else %}
+                                    <span class="badge bg-secondary px-2 py-1">{{ pedido.get_estado_display }}</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#modalEstado-{{ pedido.pk }}">
+                                    <i class="fa fa-edit me-1"></i> Actualizar
+                                </button>
+
+                                <!-- Modal de Cambio de Estado por Despachador -->
+                                <div class="modal fade" id="modalEstado-{{ pedido.pk }}" tabindex="-1" aria-hidden="true">
+                                    <div class="modal-dialog">
+                                        <div class="modal-content">
+                                            <form method="post">
+                                                {% csrf_token %}
+                                                <input type="hidden" name="pedido_id" value="{{ pedido.pk }}">
+                                                <div class="modal-header bg-primary text-white">
+                                                    <h5 class="modal-title text-white">Actualizar Encomienda {{ pedido.numero_guia }}</h5>
+                                                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                </div>
+                                                <div class="modal-content-body p-4">
+                                                    <div class="mb-3">
+                                                        <label class="form-label fw-bold">Estado Actual:</label>
+                                                        <div><span class="badge bg-secondary fs-6">{{ pedido.get_estado_display }}</span></div>
+                                                    </div>
+                                                    <div class="mb-3">
+                                                        <label for="nuevo_estado_{{ pedido.pk }}" class="form-label fw-bold">Nuevo Estado Permitido:</label>
+                                                        <select name="nuevo_estado" id="nuevo_estado_{{ pedido.pk }}" class="form-select" required>
+                                                            {% for val, desc in estados_despachador_choices %}
+                                                                <option value="{{ val }}" {% if val == pedido.estado %}selected{% endif %}>{{ desc }}</option>
+                                                            {% endfor %}
+                                                        </select>
+                                                    </div>
+                                                    <div class="mb-3">
+                                                        <label for="comentario_{{ pedido.pk }}" class="form-label fw-bold">Comentario / Novedad:</label>
+                                                        <textarea name="comentario" id="comentario_{{ pedido.pk }}" class="form-control" rows="3" placeholder="Detalla la novedad o confirmación de entrega..."></textarea>
+                                                    </div>
+                                                </div>
+                                                <div class="modal-footer bg-light">
+                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                                    <button type="submit" class="btn btn-success"><i class="fa fa-save me-1"></i>Guardar Cambio</button>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="7" class="text-center py-4 text-muted">
+                                <i class="fa fa-inbox fa-2x mb-2 d-block"></i>
+                                No tienes encomiendas asignadas para despacho en este momento.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    $(document).ready(function() {
+        $('#tabla-despacho').DataTable({
+            language: dtEspanol,
+            pageLength: 10,
+            order: []
+        });
+    });
+</script>
+{% endblock %}
