@@ -29,7 +29,7 @@ SECRET_KEY = 'django-insecure-73+6_-gcdl6xb%b0xsu6c%p-lb(%t0qd^#!6c+n$5912kf@&k(
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -136,23 +136,17 @@ MESSAGE_STORAGE = 'django.contrib.messages.storage.session.SessionStorage'
 # Tarifa de envío por kg (para cotización automática)
 TARIFA_POR_KG = 2.50  # USD por kg
 
-# ── Configuración de Correo SMTP ────────────────────────────
-# Las credenciales se leen desde el archivo .env (nunca hardcodeadas aquí).
-# En desarrollo/producción se usa el backend SMTP real (Gmail).
-# Durante los tests se cambia automáticamente al backend en memoria
-# usando el archivo de settings de test (ver TEST_RUNNER abajo).
-EMAIL_BACKEND    = os.environ.get('EMAIL_BACKEND', 'django.core.mail.backends.smtp.EmailBackend')
-EMAIL_HOST       = os.environ.get('EMAIL_HOST', 'smtp.gmail.com')
-EMAIL_PORT       = int(os.environ.get('EMAIL_PORT', 587))
-EMAIL_USE_TLS    = os.environ.get('EMAIL_USE_TLS', 'True') == 'True'
-EMAIL_HOST_USER  = os.environ.get('EMAIL_HOST_USER', '')
-EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
-DEFAULT_FROM_EMAIL  = os.environ.get('DEFAULT_FROM_EMAIL', EMAIL_HOST_USER)
+# ── Correo SMTP Gmail ────────────────────────────────────────
+# Credenciales hardcodeadas — funciona en cualquier máquina sin .env
+EMAIL_BACKEND       = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST          = 'smtp.gmail.com'
+EMAIL_PORT          = 587
+EMAIL_USE_TLS       = True
+EMAIL_HOST_USER     = 'jeniffer.sangucho2052@utc.edu.ec'
+EMAIL_HOST_PASSWORD = 'ttrl dyju xzff yyqc'
+DEFAULT_FROM_EMAIL  = 'RutaExpres <jeniffer.sangucho2052@utc.edu.ec>'
 
-# ── Configuración de Tests ───────────────────────────────────
-# Cuando se ejecuta `manage.py test`, Django busca este módulo
-# para sobreescribir configuraciones sin tocar settings.py.
-# El archivo pedido/test_settings.py define EMAIL_BACKEND = locmem.
+# En tests → backend en memoria (no intenta conectar al SMTP)
 import sys
-if 'test' in sys.argv or 'pytest' in sys.modules:
+if 'test' in sys.argv:
     EMAIL_BACKEND = 'django.core.mail.backends.locmem.EmailBackend'

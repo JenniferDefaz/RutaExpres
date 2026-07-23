@@ -2,13 +2,13 @@
 {% load static %}
 
 {% block contenido %}
-<div class="container py-5">
+<div class="container-fluid px-4 py-5">
 
     <!-- Encabezado -->
-    <div class="d-flex justify-content-between align-items-center mb-4 wow fadeInUp" data-wow-delay="0.1s">
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3 wow fadeInDown" data-wow-delay="0.1s">
         <div>
-            <h6 class="text-secondary text-uppercase">Administración</h6>
-            <h1 class="mb-0">Reporte Global de Envíos</h1>
+            <h6 class="text-secondary text-uppercase mb-1">Administración</h6>
+            <h2 class="fw-bold mb-0"><i class="fa fa-chart-bar text-primary me-2"></i>Reporte Global de Envíos</h2>
         </div>
         <a href="{% url 'lista_pedidos' %}" class="btn btn-outline-secondary">
             <i class="fa fa-arrow-left me-2"></i>Volver al Panel
@@ -16,119 +16,143 @@
     </div>
 
     <!-- Tarjetas de métricas -->
-    <div class="row g-4 mb-5 wow fadeInUp" data-wow-delay="0.2s">
-        <div class="col-6 col-md-4 col-lg-2">
-            <div class="card border-0 shadow-sm text-center h-100">
-                <div class="card-body py-4">
-                    <i class="fa fa-box fa-2x text-secondary mb-2"></i>
+    <div class="row g-4 mb-5">
+        <div class="col-6 col-md-4 col-xl-2 wow fadeInUp" data-wow-delay="0.1s">
+            <div class="card stat-card h-100">
+                <div class="card-body text-center py-4">
+                    <div class="icon-box mx-auto mb-3" style="background:rgba(108,117,125,.1);">
+                        <i class="fa fa-boxes text-secondary" style="font-size:26px;"></i>
+                    </div>
                     <h2 class="fw-bold mb-0">{{ total }}</h2>
-                    <p class="text-muted small mb-0">Total</p>
+                    <p class="text-muted small mb-0 mt-1">Total</p>
                 </div>
             </div>
         </div>
-        <div class="col-6 col-md-4 col-lg-2">
-            <div class="card border-0 shadow-sm text-center h-100">
-                <div class="card-body py-4">
-                    <i class="fa fa-clock fa-2x text-warning mb-2"></i>
+        <div class="col-6 col-md-4 col-xl-2 wow fadeInUp" data-wow-delay="0.15s">
+            <div class="card stat-card h-100">
+                <div class="card-body text-center py-4">
+                    <div class="icon-box mx-auto mb-3" style="background:rgba(255,193,7,.1);">
+                        <i class="fa fa-clock text-warning" style="font-size:26px;"></i>
+                    </div>
                     <h2 class="fw-bold mb-0 text-warning">{{ pendientes }}</h2>
-                    <p class="text-muted small mb-0">Pendientes</p>
+                    <p class="text-muted small mb-0 mt-1">Pendientes</p>
                 </div>
             </div>
         </div>
-        <div class="col-6 col-md-4 col-lg-2">
-            <div class="card border-0 shadow-sm text-center h-100">
-                <div class="card-body py-4">
-                    <i class="fa fa-shipping-fast fa-2x text-info mb-2"></i>
+        <div class="col-6 col-md-4 col-xl-2 wow fadeInUp" data-wow-delay="0.2s">
+            <div class="card stat-card h-100">
+                <div class="card-body text-center py-4">
+                    <div class="icon-box mx-auto mb-3" style="background:rgba(13,202,240,.1);">
+                        <i class="fa fa-truck text-info" style="font-size:26px;"></i>
+                    </div>
                     <h2 class="fw-bold mb-0 text-info">{{ en_transito }}</h2>
-                    <p class="text-muted small mb-0">En Tránsito</p>
+                    <p class="text-muted small mb-0 mt-1">En Tránsito</p>
                 </div>
             </div>
         </div>
-        <div class="col-6 col-md-4 col-lg-2">
-            <div class="card border-0 shadow-sm text-center h-100">
-                <div class="card-body py-4">
-                    <i class="fa fa-check-circle fa-2x text-success mb-2"></i>
+        <div class="col-6 col-md-4 col-xl-2 wow fadeInUp" data-wow-delay="0.25s">
+            <div class="card stat-card h-100">
+                <div class="card-body text-center py-4">
+                    <div class="icon-box mx-auto mb-3" style="background:rgba(25,135,84,.1);">
+                        <i class="fa fa-check-circle text-success" style="font-size:26px;"></i>
+                    </div>
                     <h2 class="fw-bold mb-0 text-success">{{ entregados }}</h2>
-                    <p class="text-muted small mb-0">Entregados</p>
+                    <p class="text-muted small mb-0 mt-1">Entregados</p>
                 </div>
             </div>
         </div>
-        <div class="col-6 col-md-4 col-lg-2">
-            <div class="card border-0 shadow-sm text-center h-100">
-                <div class="card-body py-4">
-                    <i class="fa fa-times-circle fa-2x text-danger mb-2"></i>
+        <div class="col-6 col-md-4 col-xl-2 wow fadeInUp" data-wow-delay="0.3s">
+            <div class="card stat-card h-100">
+                <div class="card-body text-center py-4">
+                    <div class="icon-box mx-auto mb-3" style="background:rgba(220,53,69,.1);">
+                        <i class="fa fa-times-circle text-danger" style="font-size:26px;"></i>
+                    </div>
                     <h2 class="fw-bold mb-0 text-danger">{{ cancelados }}</h2>
-                    <p class="text-muted small mb-0">Cancelados</p>
+                    <p class="text-muted small mb-0 mt-1">Cancelados</p>
                 </div>
             </div>
         </div>
-        <div class="col-6 col-md-4 col-lg-2">
-            <div class="card border-0 shadow-sm text-center h-100 bg-primary text-white">
-                <div class="card-body py-4">
-                    <i class="fa fa-dollar-sign fa-2x mb-2"></i>
+        <div class="col-6 col-md-4 col-xl-2 wow fadeInUp" data-wow-delay="0.35s">
+            <div class="card stat-card h-100 bg-primary text-white">
+                <div class="card-body text-center py-4">
+                    <div class="icon-box mx-auto mb-3" style="background:rgba(255,255,255,.2);">
+                        <i class="fa fa-dollar-sign text-white" style="font-size:26px;"></i>
+                    </div>
                     <h2 class="fw-bold mb-0">${{ ingresos }}</h2>
-                    <p class="small mb-0 opacity-75">Ingresos</p>
+                    <p class="small mb-0 mt-1 opacity-75">Ingresos</p>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Barras de progreso -->
-    <div class="card border-0 shadow-sm mb-5 wow fadeInUp" data-wow-delay="0.3s">
-        <div class="card-body p-4">
-            <h5 class="fw-bold mb-4"><i class="fa fa-chart-bar text-primary me-2"></i>Distribución por estado</h5>
-            {% if total > 0 %}
-            <div class="mb-3">
-                <div class="d-flex justify-content-between mb-1">
-                    <span class="text-warning fw-semibold">Pendientes</span>
-                    <span class="text-warning">{{ pendientes }} ({% widthratio pendientes total 100 %}%)</span>
-                </div>
-                <div class="progress" style="height:12px;">
-                    <div class="progress-bar bg-warning" style="width: {% widthratio pendientes total 100 %}%"></div>
-                </div>
+    <!-- Gráficos + Barras de progreso -->
+    <div class="row g-4 mb-5">
+        <div class="col-lg-5 wow fadeInLeft" data-wow-delay="0.1s">
+            <div class="chart-container h-100">
+                <h5 class="fw-bold mb-4"><i class="fa fa-chart-pie text-primary me-2"></i>Distribución por Estado</h5>
+                {% if total > 0 %}
+                <canvas id="graficoEstado" style="max-height:240px;"></canvas>
+                {% else %}
+                <p class="text-muted text-center py-5">No hay datos disponibles.</p>
+                {% endif %}
             </div>
-            <div class="mb-3">
-                <div class="d-flex justify-content-between mb-1">
-                    <span class="text-info fw-semibold">En Tránsito</span>
-                    <span class="text-info">{{ en_transito }} ({% widthratio en_transito total 100 %}%)</span>
+        </div>
+        <div class="col-lg-7 wow fadeInRight" data-wow-delay="0.1s">
+            <div class="chart-container h-100">
+                <h5 class="fw-bold mb-4"><i class="fa fa-chart-bar text-primary me-2"></i>Resumen Visual</h5>
+                {% if total > 0 %}
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between mb-1">
+                        <span class="text-warning fw-semibold"><i class="fa fa-circle me-1"></i>Pendientes</span>
+                        <span class="text-warning">{{ pendientes }} ({% widthratio pendientes total 100 %}%)</span>
+                    </div>
+                    <div class="progress rounded-pill" style="height:12px;">
+                        <div class="progress-bar bg-warning rounded-pill" style="width:{% widthratio pendientes total 100 %}%;"></div>
+                    </div>
                 </div>
-                <div class="progress" style="height:12px;">
-                    <div class="progress-bar bg-info" style="width: {% widthratio en_transito total 100 %}%"></div>
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between mb-1">
+                        <span class="text-info fw-semibold"><i class="fa fa-circle me-1"></i>En Tránsito</span>
+                        <span class="text-info">{{ en_transito }} ({% widthratio en_transito total 100 %}%)</span>
+                    </div>
+                    <div class="progress rounded-pill" style="height:12px;">
+                        <div class="progress-bar bg-info rounded-pill" style="width:{% widthratio en_transito total 100 %}%;"></div>
+                    </div>
                 </div>
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between mb-1">
+                        <span class="text-success fw-semibold"><i class="fa fa-circle me-1"></i>Entregados</span>
+                        <span class="text-success">{{ entregados }} ({% widthratio entregados total 100 %}%)</span>
+                    </div>
+                    <div class="progress rounded-pill" style="height:12px;">
+                        <div class="progress-bar bg-success rounded-pill" style="width:{% widthratio entregados total 100 %}%;"></div>
+                    </div>
+                </div>
+                <div class="mb-0">
+                    <div class="d-flex justify-content-between mb-1">
+                        <span class="text-danger fw-semibold"><i class="fa fa-circle me-1"></i>Cancelados</span>
+                        <span class="text-danger">{{ cancelados }} ({% widthratio cancelados total 100 %}%)</span>
+                    </div>
+                    <div class="progress rounded-pill" style="height:12px;">
+                        <div class="progress-bar bg-danger rounded-pill" style="width:{% widthratio cancelados total 100 %}%;"></div>
+                    </div>
+                </div>
+                {% else %}
+                <p class="text-muted text-center py-5">No hay pedidos registrados.</p>
+                {% endif %}
             </div>
-            <div class="mb-3">
-                <div class="d-flex justify-content-between mb-1">
-                    <span class="text-success fw-semibold">Entregados</span>
-                    <span class="text-success">{{ entregados }} ({% widthratio entregados total 100 %}%)</span>
-                </div>
-                <div class="progress" style="height:12px;">
-                    <div class="progress-bar bg-success" style="width: {% widthratio entregados total 100 %}%"></div>
-                </div>
-            </div>
-            <div class="mb-0">
-                <div class="d-flex justify-content-between mb-1">
-                    <span class="text-danger fw-semibold">Cancelados</span>
-                    <span class="text-danger">{{ cancelados }} ({% widthratio cancelados total 100 %}%)</span>
-                </div>
-                <div class="progress" style="height:12px;">
-                    <div class="progress-bar bg-danger" style="width: {% widthratio cancelados total 100 %}%"></div>
-                </div>
-            </div>
-            {% else %}
-            <p class="text-muted text-center py-3">No hay pedidos registrados aún.</p>
-            {% endif %}
         </div>
     </div>
 
-    <!-- Tabla detallada con DataTables -->
-    <div class="card border-0 shadow-sm wow fadeInUp" data-wow-delay="0.4s">
+    <!-- Tabla detallada -->
+    <div class="table-card card wow fadeInUp" data-wow-delay="0.3s">
+        <div class="card-header d-flex justify-content-between align-items-center py-3 px-4" style="background:var(--dark);">
+            <h5 class="mb-0 text-white"><i class="fa fa-table me-2"></i>Detalle Completo de Pedidos</h5>
+        </div>
         <div class="card-body p-0">
-            <div class="p-4 border-bottom">
-                <h5 class="fw-bold mb-0"><i class="fa fa-list text-primary me-2"></i>Detalle de Pedidos</h5>
-            </div>
             <div class="table-responsive">
                 <table id="tblReporte" class="table table-hover align-middle mb-0">
-                    <thead class="table-dark">
+                    <thead>
                         <tr>
                             <th class="ps-4">Tracking</th>
                             <th>Cliente</th>
@@ -136,15 +160,18 @@
                             <th>Peso (kg)</th>
                             <th>Precio ($)</th>
                             <th>Método Pago</th>
+                            <th>Pago</th>
+                            <th>Despachador</th>
                             <th>Estado</th>
-                            <th>Fecha</th>
+                            <th class="pe-4">Fecha</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for pedido in pedidos %}
                         <tr>
-                            <td class="ps-4 fw-semibold text-primary">
-                                <a href="{% url 'detalle_pedido' pedido.numero_tracking %}">
+                            <td class="ps-4">
+                                <a href="{% url 'detalle_pedido' pedido.numero_tracking %}"
+                                   class="fw-semibold text-primary text-decoration-none">
                                     {{ pedido.numero_tracking }}
                                 </a>
                             </td>
@@ -153,35 +180,46 @@
                             <td>{{ pedido.peso_kg }}</td>
                             <td>
                                 {% if pedido.precio_envio %}
-                                    <strong>${{ pedido.precio_envio }}</strong>
+                                <span class="fw-semibold text-success">${{ pedido.precio_envio }}</span>
+                                {% else %}<span class="text-muted">—</span>{% endif %}
+                            </td>
+                            <td>{{ pedido.get_metodo_pago_display|default:"—" }}</td>
+                            <td>
+                                {% if pedido.pago_confirmado %}
+                                <span class="badge bg-success"><i class="fa fa-check me-1"></i>Sí</span>
                                 {% else %}
-                                    <span class="text-muted">—</span>
+                                <span class="badge bg-warning text-dark"><i class="fa fa-clock me-1"></i>No</span>
                                 {% endif %}
                             </td>
                             <td>
-                                {% if pedido.metodo_pago %}
-                                    {{ pedido.get_metodo_pago_display }}
-                                {% else %}
-                                    <span class="text-muted">—</span>
-                                {% endif %}
+                                {% if pedido.despachador %}
+                                {{ pedido.despachador.get_full_name|default:pedido.despachador.username }}
+                                {% else %}<span class="text-muted small">Sin asignar</span>{% endif %}
                             </td>
                             <td>
-                                <span class="badge
-                                    {% if pedido.estado == 'pendiente' %}bg-warning text-dark
-                                    {% elif pedido.estado == 'en_transito' %}bg-info text-dark
-                                    {% elif pedido.estado == 'entregado' %}bg-success
-                                    {% else %}bg-danger{% endif %}">
+                                <span class="badge-estado
+                                    {% if pedido.estado == 'pendiente' %}badge-pendiente
+                                    {% elif pedido.estado == 'en_transito' %}badge-transito
+                                    {% elif pedido.estado == 'entregado' %}badge-entregado
+                                    {% else %}badge-cancelado{% endif %}">
                                     {{ pedido.get_estado_display }}
                                 </span>
                             </td>
-                            <td>{{ pedido.fecha_creacion|date:"d/m/Y" }}</td>
+                            <td class="pe-4"><small>{{ pedido.fecha_creacion|date:"d/m/Y" }}</small></td>
                         </tr>
                         {% empty %}
-                        <tr>
-                            <td colspan="8" class="text-center text-muted py-4">No hay pedidos registrados.</td>
-                        </tr>
+                        <tr><td colspan="10" class="text-center text-muted py-4">No hay pedidos registrados.</td></tr>
                         {% endfor %}
                     </tbody>
+                    {% if total > 0 %}
+                    <tfoot class="table-light fw-bold">
+                        <tr>
+                            <td colspan="4" class="ps-4 text-end">Total ingresos:</td>
+                            <td class="text-success fw-bold">${{ ingresos }}</td>
+                            <td colspan="5"></td>
+                        </tr>
+                    </tfoot>
+                    {% endif %}
                 </table>
             </div>
         </div>
@@ -191,15 +229,41 @@
 {% endblock %}
 
 {% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.1/dist/chart.umd.min.js"></script>
 <script>
-    new DataTable('#tblReporte', {
-        layout: {
-            topStart: {
-                buttons: ['copyHtml5', 'excelHtml5', 'csvHtml5', 'pdfHtml5']
-            }
+{% if total > 0 %}
+new Chart(document.getElementById('graficoEstado'), {
+    type: 'doughnut',
+    data: {
+        labels: ['Pendientes', 'En Tránsito', 'Entregados', 'Cancelados'],
+        datasets: [{
+            data: [{{ pendientes }}, {{ en_transito }}, {{ entregados }}, {{ cancelados }}],
+            backgroundColor: ['#ffc107','#0dcaf0','#198754','#dc3545'],
+            borderColor: ['#e6ac00','#0aa4c4','#0f5132','#b02a37'],
+            borderWidth: 2
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            legend: { position: 'bottom' },
+            tooltip: { callbacks: {
+                label: function(ctx) { return ctx.label + ': ' + ctx.parsed + ' pedidos'; }
+            }}
         },
-        language: dtEspanol,
-        order: [[7, 'desc']]
-    });
+        cutout: '55%'
+    }
+});
+{% endif %}
+
+new DataTable('#tblReporte', {
+    layout: {
+        topStart: {
+            buttons: ['copyHtml5', 'excelHtml5', 'csvHtml5', 'pdfHtml5']
+        }
+    },
+    language: dtEspanol,
+    order: [[9, 'desc']]
+});
 </script>
 {% endblock %}

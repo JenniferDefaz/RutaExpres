@@ -1,0 +1,182 @@
+{% extends './plantillaPrin.html' %}
+{% load static %}
+
+{% block contenido %}
+<div class="container-fluid px-4 py-5">
+
+    <!-- Bienvenida -->
+    <div class="wow fadeInDown" data-wow-delay="0.1s"
+         style="background:linear-gradient(135deg,#1F1F1F 0%,#CE1212 100%);border-radius:16px;color:#fff;padding:32px 36px;margin-bottom:30px;">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+            <div>
+                <h2 class="fw-bold mb-1"><i class="fa fa-user-circle me-2"></i>Mi Panel de Cliente</h2>
+                <p class="mb-0" style="opacity:.85;">Hola, <strong>{{ request.user.first_name|default:request.user.username }}</strong> — Aquí puedes ver y gestionar tus envíos.</p>
+            </div>
+            <a href="{% url 'registrar_pedido' %}" class="btn btn-warning fw-semibold">
+                <i class="fa fa-plus me-2"></i>Nuevo Envío
+            </a>
+        </div>
+    </div>
+
+    <!-- Resumen de pedidos -->
+    <div class="row g-4 mb-5">
+        <div class="col-6 col-md-3 wow fadeInUp" data-wow-delay="0.1s">
+            <div class="card stat-card h-100">
+                <div class="card-body text-center py-4">
+                    <div class="icon-box mx-auto mb-3" style="background:rgba(0,156,59,.1);">
+                        <i class="fa fa-box-open text-success" style="font-size:26px;"></i>
+                    </div>
+                    <h2 class="fw-bold mb-0">{{ total }}</h2>
+                    <p class="text-muted small mb-0 mt-1">Total Envíos</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3 wow fadeInUp" data-wow-delay="0.15s">
+            <div class="card stat-card h-100">
+                <div class="card-body text-center py-4">
+                    <div class="icon-box mx-auto mb-3" style="background:rgba(255,193,7,.1);">
+                        <i class="fa fa-hourglass-half text-warning" style="font-size:26px;"></i>
+                    </div>
+                    <h2 class="fw-bold mb-0 text-warning">{{ pendientes }}</h2>
+                    <p class="text-muted small mb-0 mt-1">Pendientes</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3 wow fadeInUp" data-wow-delay="0.2s">
+            <div class="card stat-card h-100">
+                <div class="card-body text-center py-4">
+                    <div class="icon-box mx-auto mb-3" style="background:rgba(13,202,240,.1);">
+                        <i class="fa fa-truck text-info" style="font-size:26px;"></i>
+                    </div>
+                    <h2 class="fw-bold mb-0 text-info">{{ en_transito }}</h2>
+                    <p class="text-muted small mb-0 mt-1">En Tránsito</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3 wow fadeInUp" data-wow-delay="0.25s">
+            <div class="card stat-card h-100">
+                <div class="card-body text-center py-4">
+                    <div class="icon-box mx-auto mb-3" style="background:rgba(25,135,84,.1);">
+                        <i class="fa fa-check-double text-success" style="font-size:26px;"></i>
+                    </div>
+                    <h2 class="fw-bold mb-0 text-success">{{ entregados }}</h2>
+                    <p class="text-muted small mb-0 mt-1">Entregados</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Acciones rápidas -->
+    <div class="row g-3 mb-5">
+        <div class="col-md-4 wow fadeInUp" data-wow-delay="0.1s">
+            <a href="{% url 'registrar_pedido' %}" class="card border-0 shadow-sm text-decoration-none" style="border-radius:12px;transition:.2s;" onmouseover="this.style.transform='translateY(-4px)'" onmouseout="this.style.transform='none'">
+                <div class="card-body d-flex align-items-center gap-3 py-4">
+                    <div class="icon-box" style="background:rgba(0,156,59,.1);min-width:56px;height:56px;border-radius:12px;">
+                        <i class="fa fa-plus-circle text-success fa-2x"></i>
+                    </div>
+                    <div>
+                        <h6 class="fw-bold mb-1 text-dark">Registrar Envío</h6>
+                        <small class="text-muted">Crea un nuevo pedido de envío</small>
+                    </div>
+                </div>
+            </a>
+        </div>
+        <div class="col-md-4 wow fadeInUp" data-wow-delay="0.15s">
+            <a href="{% url 'rastrear_pedido' %}" class="card border-0 shadow-sm text-decoration-none" style="border-radius:12px;transition:.2s;" onmouseover="this.style.transform='translateY(-4px)'" onmouseout="this.style.transform='none'">
+                <div class="card-body d-flex align-items-center gap-3 py-4">
+                    <div class="icon-box" style="background:rgba(13,202,240,.1);min-width:56px;height:56px;border-radius:12px;">
+                        <i class="fa fa-search text-info fa-2x"></i>
+                    </div>
+                    <div>
+                        <h6 class="fw-bold mb-1 text-dark">Rastrear Pedido</h6>
+                        <small class="text-muted">Consulta el estado de tu envío</small>
+                    </div>
+                </div>
+            </a>
+        </div>
+        <div class="col-md-4 wow fadeInUp" data-wow-delay="0.2s">
+            <a href="{% url 'panel_cliente' %}" class="card border-0 shadow-sm text-decoration-none" style="border-radius:12px;transition:.2s;" onmouseover="this.style.transform='translateY(-4px)'" onmouseout="this.style.transform='none'">
+                <div class="card-body d-flex align-items-center gap-3 py-4">
+                    <div class="icon-box" style="background:rgba(108,117,125,.1);min-width:56px;height:56px;border-radius:12px;">
+                        <i class="fa fa-list-alt text-secondary fa-2x"></i>
+                    </div>
+                    <div>
+                        <h6 class="fw-bold mb-1 text-dark">Todos Mis Pedidos</h6>
+                        <small class="text-muted">Ver el historial completo</small>
+                    </div>
+                </div>
+            </a>
+        </div>
+    </div>
+
+    <!-- Tabla de pedidos recientes -->
+    <div class="table-card card wow fadeInUp" data-wow-delay="0.1s">
+        <div class="card-header d-flex justify-content-between align-items-center py-3 px-4" style="background:var(--dark);">
+            <h5 class="mb-0 text-white"><i class="fa fa-history me-2"></i>Mis Envíos Recientes</h5>
+            <a href="{% url 'panel_cliente' %}" class="btn btn-sm btn-outline-light">Ver todos</a>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table id="tblPedidosCliente" class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="ps-4">Tracking</th>
+                            <th>Destino</th>
+                            <th>Tipo</th>
+                            <th>Fecha</th>
+                            <th>Estado</th>
+                            <th class="pe-4">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for p in pedidos %}
+                        <tr>
+                            <td class="ps-4 fw-semibold text-primary">{{ p.numero_tracking }}</td>
+                            <td>{{ p.destino }}</td>
+                            <td>{{ p.get_tipo_servicio_display }}</td>
+                            <td>{{ p.fecha_creacion|date:"d/m/Y" }}</td>
+                            <td>
+                                <span class="badge-estado
+                                    {% if p.estado == 'pendiente' %}badge-pendiente
+                                    {% elif p.estado == 'en_transito' %}badge-transito
+                                    {% elif p.estado == 'entregado' %}badge-entregado
+                                    {% else %}badge-cancelado{% endif %}">
+                                    <i class="fa {% if p.estado == 'pendiente' %}fa-clock{% elif p.estado == 'en_transito' %}fa-truck{% elif p.estado == 'entregado' %}fa-check{% else %}fa-times{% endif %}"></i>
+                                    {{ p.get_estado_display }}
+                                </span>
+                            </td>
+                            <td class="pe-4">
+                                <a href="{% url 'detalle_pedido' p.numero_tracking %}" class="btn btn-sm btn-outline-primary" title="Ver detalle">
+                                    <i class="fa fa-eye"></i>
+                                </a>
+                                <a href="{% url 'descargar_orden_pdf' p.numero_tracking %}" target="_blank" class="btn btn-sm btn-outline-danger ms-1" title="Descargar">
+                                    <i class="fa fa-file-pdf"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="6" class="text-center text-muted py-5">
+                            <i class="fa fa-box-open fa-3x mb-3 d-block text-muted"></i>
+                            No tienes envíos registrados. <a href="{% url 'registrar_pedido' %}">¡Crea tu primer envío!</a>
+                        </td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    {% if pedidos %}
+    new DataTable('#tblPedidosCliente', {
+        language: dtEspanol,
+        order: [[3, 'desc']],
+        pageLength: 10
+    });
+    {% endif %}
+</script>
+{% endblock %}
