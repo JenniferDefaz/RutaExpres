@@ -82,7 +82,7 @@
                                         {% for e in form.password.errors %}{{ e }}{% endfor %}
                                     </div>
                                 {% endif %}
-                                <div class="invalid-feedback" id="err-pwd"></div>
+                                <div class="invalid-feedback" id="err-password"></div>
                             </div>
                             <div class="col-md-6">
                                 <label for="{{ form.password_confirm.id_for_label }}" class="form-label fw-semibold">
@@ -99,7 +99,7 @@
                                         {% for e in form.password_confirm.errors %}{{ e }}{% endfor %}
                                     </div>
                                 {% endif %}
-                                <div class="invalid-feedback" id="err-pwd2"></div>
+                                <div class="invalid-feedback" id="err-password_confirm"></div>
                             </div>
                         </div>
 
@@ -117,12 +117,13 @@
                                 <i class="fa fa-phone text-primary me-1"></i>Teléfono <span class="text-danger">*</span>
                             </label>
                             {{ form.telefono }}
+                            <div class="form-text text-muted">Convencional (7-9 dígitos) o celular (10 dígitos). Solo números.</div>
                             {% if form.telefono.errors %}
                                 <div class="invalid-feedback d-block">
                                     {% for e in form.telefono.errors %}{{ e }}{% endfor %}
                                 </div>
                             {% endif %}
-                            <div class="invalid-feedback" id="err-tel"></div>
+                            <div class="invalid-feedback" id="err-telefono"></div>
                         </div>
 
                         <!-- Dirección -->
@@ -136,7 +137,7 @@
                                     {% for e in form.direccion.errors %}{{ e }}{% endfor %}
                                 </div>
                             {% endif %}
-                            <div class="invalid-feedback" id="err-dir"></div>
+                            <div class="invalid-feedback" id="err-direccion"></div>
                         </div>
 
                         <!-- Errores globales -->
@@ -175,7 +176,30 @@
 <script>
 document.addEventListener('DOMContentLoaded', function() {
 
-    // Marcar campos Django con error como is-invalid
+    // ---------- Utilidades comunes ----------
+    const SOLO_LETRAS = /^[A-Za-zÁÉÍÓÚáéíóúÑñÜü\s]*$/;
+    const SOLO_NUMEROS = /^\d*$/;
+    // Exige: usuario de al menos 2 caracteres, dominio de al menos 2 caracteres,
+// y una extensión (TLD) de 2 a 6 letras (com, net, ec, org, edu.ec, etc.)
+    const EMAIL_RE = /^[a-zA-Z0-9._%+-]{2,}@[a-zA-Z0-9-]{2,}\.[a-zA-Z.]{2,}$/;
+
+    function mostrarError(inputEl, msg) {
+        if (!inputEl) return;
+        inputEl.classList.add('is-invalid');
+        const baseId = inputEl.id.replace('id_', '');
+        const errDiv = document.getElementById('err-' + baseId);
+        if (errDiv) errDiv.textContent = msg;
+    }
+
+    function limpiarError(inputEl) {
+        if (!inputEl) return;
+        inputEl.classList.remove('is-invalid');
+        const baseId = inputEl.id.replace('id_', '');
+        const errDiv = document.getElementById('err-' + baseId);
+        if (errDiv) errDiv.textContent = '';
+    }
+
+    // Marcar campos Django con error (del backend) como is-invalid al cargar
     document.querySelectorAll('.invalid-feedback.d-block').forEach(function(el) {
         const prev = el.previousElementSibling;
         if (prev && (prev.tagName === 'INPUT' || prev.tagName === 'TEXTAREA' || prev.tagName === 'SELECT')) {
@@ -183,7 +207,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // Toggle contraseñas
+    // ---------- Toggle contraseñas ----------
     function togglePwd(btnId, inputId, iconId) {
         const btn = document.getElementById(btnId);
         if (!btn) return;
@@ -203,15 +227,115 @@ document.addEventListener('DOMContentLoaded', function() {
     togglePwd('togglePwd1', 'id_password', 'eye1');
     togglePwd('togglePwd2', 'id_password_confirm', 'eye2');
 
-    // Fortaleza de contraseña
-    const pwdInput = document.getElementById('id_password');
-    if (pwdInput) {
-        pwdInput.addEventListener('input', function() {
-            const v = this.value;
-            const box = document.getElementById('pwd-strength-box');
-            const bar = document.getElementById('pwd-strength-bar');
-            const lbl = document.getElementById('pwd-strength-label');
-            if (!v) { box.style.display = 'none'; return; }
+    // ---------- Referencias a los campos ----------
+    const nombreInput   = document.getElementById('id_nombre');
+    const apellidoInput = document.getElementById('id_apellido');
+    const emailInput    = document.getElementById('id_email');
+    const pwdInput      = document.getElementById('id_password');
+    const pwd2Input     = document.getElementById('id_password_confirm');
+    const telInput      = document.getElementById('id_telefono');
+    const dirInput      = document.getElementById('id_direccion');
+
+    // ---------- Validación EN VIVO: Nombre y Apellido (solo letras) ----------
+    function validarNombreApellido(inputEl, etiqueta) {
+        if (!inputEl) return true;
+        const val = inputEl.value;
+        if (!val.trim()) {
+            mostrarError(inputEl, etiqueta + ' es obligatorio.');
+            return false;
+        }
+        if (!SOLO_LETRAS.test(val)) {
+            mostrarError(inputEl, etiqueta + ' solo puede contener letras.');
+            return false;
+        }
+        if (val.trim().length < 2) {
+            mostrarError(inputEl, etiqueta + ' debe tener al menos 2 caracteres.');
+            return false;
+        }
+        limpiarError(inputEl);
+        return true;
+    }
+
+    if (nombreInput) {
+        nombreInput.addEventListener('input', function() {
+            validarNombreApellido(nombreInput, 'El nombre');
+        });
+    }
+    if (apellidoInput) {
+        apellidoInput.addEventListener('input', function() {
+            validarNombreApellido(apellidoInput, 'El apellido');
+        });
+    }
+
+    // ---------- Validación EN VIVO: Email ----------
+    function validarEmail() {
+    if (!emailInput) return true;
+    const val = emailInput.value.trim();
+
+    if (!val) {
+        mostrarError(emailInput, 'El correo es obligatorio.');
+        return false;
+    }
+
+    const partes = val.split('@');
+    if (partes.length !== 2) {
+        mostrarError(emailInput, 'Ingresa un correo electrónico válido.');
+        return false;
+    }
+
+    const [usuario, dominio] = partes;
+    const dominioPartes = dominio.split('.');
+    const dominioBase = dominioPartes[0] || '';
+    const tld = dominioPartes[dominioPartes.length - 1] || '';
+
+    if (usuario.length < 2) {
+        mostrarError(emailInput, 'El nombre de usuario del correo es demasiado corto.');
+        return false;
+    }
+
+    if (dominioBase.length < 2) {
+        mostrarError(emailInput, 'El dominio del correo no es válido (ej: gmail.com, hotmail.com).');
+        return false;
+    }
+
+    // Rechaza dominios que sean solo números (ej: 1.com, 123.net)
+    if (/^\d+$/.test(dominioBase)) {
+        mostrarError(emailInput, 'El dominio del correo no puede ser solo números.');
+        return false;
+    }
+
+    // El dominio debe contener al menos una letra
+    if (!/[a-zA-Z]/.test(dominioBase)) {
+        mostrarError(emailInput, 'El dominio del correo no es válido.');
+        return false;
+    }
+
+    if (tld.length < 2) {
+        mostrarError(emailInput, 'La extensión del correo no es válida (ej: .com, .ec, .org).');
+        return false;
+    }
+
+    if (!EMAIL_RE.test(val)) {
+        mostrarError(emailInput, 'Ingresa un correo electrónico válido.');
+        return false;
+    }
+
+    limpiarError(emailInput);
+    return true;
+}
+
+    // ---------- Fortaleza y validación EN VIVO de contraseña ----------
+    function validarPassword() {
+        if (!pwdInput) return true;
+        const v = pwdInput.value;
+
+        // Barra de fortaleza
+        const box = document.getElementById('pwd-strength-box');
+        const bar = document.getElementById('pwd-strength-bar');
+        const lbl = document.getElementById('pwd-strength-label');
+        if (!v) {
+            box.style.display = 'none';
+        } else {
             box.style.display = 'block';
             let strength = 0;
             if (v.length >= 8) strength++;
@@ -224,81 +348,125 @@ document.addEventListener('DOMContentLoaded', function() {
             bar.style.width = w + '%';
             bar.className = 'progress-bar ' + clrs[strength];
             lbl.textContent = lbls[strength];
-            lbl.style.color = ['','#dc3545','#ffc107','#0dcaf0','#CE1212'][strength];
+            lbl.style.color = ['', '#dc3545', '#ffc107', '#0dcaf0', '#CE1212'][strength];
+        }
+
+        // Validación de longitud
+        if (!v) {
+            mostrarError(pwdInput, 'La contraseña es obligatoria.');
+            return false;
+        }
+        if (v.length < 8) {
+            mostrarError(pwdInput, 'La contraseña debe tener al menos 8 caracteres.');
+            return false;
+        }
+        limpiarError(pwdInput);
+        return true;
+    }
+
+    function validarPasswordConfirm() {
+        if (!pwd2Input) return true;
+        if (!pwd2Input.value) {
+            mostrarError(pwd2Input, 'Confirma tu contraseña.');
+            return false;
+        }
+        if (pwdInput && pwd2Input.value !== pwdInput.value) {
+            mostrarError(pwd2Input, 'Las contraseñas no coinciden.');
+            return false;
+        }
+        limpiarError(pwd2Input);
+        return true;
+    }
+
+    if (pwdInput) {
+        pwdInput.addEventListener('input', function() {
+            validarPassword();
+            if (pwd2Input && pwd2Input.value) validarPasswordConfirm();
+        });
+    }
+    if (pwd2Input) {
+        pwd2Input.addEventListener('input', validarPasswordConfirm);
+    }
+
+    // ---------- Validación EN VIVO: Teléfono (solo números, 7-10 dígitos) ----------
+    if (telInput) {
+        telInput.setAttribute('maxlength', '10');
+        telInput.setAttribute('inputmode', 'numeric');
+    }
+
+    function validarTelefono() {
+        if (!telInput) return true;
+        // Filtra cualquier caracter que no sea número, en tiempo real
+        telInput.value = telInput.value.replace(/\D/g, '').slice(0, 10);
+        const val = telInput.value;
+
+        if (!val) {
+            mostrarError(telInput, 'El teléfono es obligatorio.');
+            return false;
+        }
+        if (!SOLO_NUMEROS.test(val)) {
+            mostrarError(telInput, 'El teléfono solo puede contener números.');
+            return false;
+        }
+        if (val.length < 7 || val.length > 10) {
+            mostrarError(telInput, 'El teléfono debe tener entre 7 y 10 dígitos (convencional o celular). Llevas ' + val.length + '.');
+            return false;
+        }
+        limpiarError(telInput);
+        return true;
+    }
+
+    if (telInput) {
+        telInput.addEventListener('input', validarTelefono);
+
+        // Bloquea el pegado de texto con letras/símbolos
+        telInput.addEventListener('paste', function(e) {
+            e.preventDefault();
+            const texto = (e.clipboardData || window.clipboardData).getData('text');
+            const soloNumeros = texto.replace(/\D/g, '').slice(0, 10);
+            this.value = soloNumeros;
+            validarTelefono();
         });
     }
 
-    // Validación al enviar
+    // ---------- Validación EN VIVO: Dirección ----------
+    function validarDireccion() {
+        if (!dirInput) return true;
+        if (!dirInput.value.trim()) {
+            mostrarError(dirInput, 'La dirección es obligatoria.');
+            return false;
+        }
+        if (dirInput.value.trim().length < 5) {
+            mostrarError(dirInput, 'Ingresa una dirección más específica (mínimo 5 caracteres).');
+            return false;
+        }
+        limpiarError(dirInput);
+        return true;
+    }
+    if (dirInput) {
+        dirInput.addEventListener('input', validarDireccion);
+    }
+
+    // ---------- Validación al enviar el formulario ----------
     document.getElementById('form-cliente').addEventListener('submit', function(e) {
-        let valido = true;
+        const okNombre   = validarNombreApellido(nombreInput, 'El nombre');
+        const okApellido = validarNombreApellido(apellidoInput, 'El apellido');
+        const okEmail    = validarEmail();
+        const okPwd      = validarPassword();
+        const okPwd2     = validarPasswordConfirm();
+        const okTel      = validarTelefono();
+        const okDir      = validarDireccion();
 
-        // Limpiar errores JS previos
-        document.querySelectorAll('.js-error').forEach(el => el.remove());
-        document.querySelectorAll('.js-invalid').forEach(el => el.classList.remove('is-invalid', 'js-invalid'));
+        const valido = okNombre && okApellido && okEmail && okPwd && okPwd2 && okTel && okDir;
 
-        function error(id, msg) {
-            const el = document.getElementById(id);
-            if (!el) return;
-            el.classList.add('is-invalid', 'js-invalid');
-            const baseId = id.replace('id_', '');
-            let errDiv = document.getElementById('err-' + baseId);
-            if (!errDiv) {
-                errDiv = document.createElement('div');
-                errDiv.className = 'invalid-feedback d-block js-error';
-                const parent = el.closest('.input-group') || el.parentNode;
-                parent.insertAdjacentElement('afterend', errDiv);
-            }
-            errDiv.textContent = msg;
-            errDiv.style.display = 'block';
-            valido = false;
+        if (!valido) {
+            e.preventDefault();
+            // Lleva el foco al primer campo con error
+            const primerError = document.querySelector('#form-cliente .is-invalid');
+            if (primerError) primerError.focus();
         }
-
-        const nombre = document.getElementById('id_nombre');
-        if (nombre && nombre.value.trim().length < 2)
-            error('id_nombre', 'El nombre debe tener al menos 2 caracteres.');
-
-        const apellido = document.getElementById('id_apellido');
-        if (apellido && apellido.value.trim().length < 2)
-            error('id_apellido', 'El apellido debe tener al menos 2 caracteres.');
-
-        const email = document.getElementById('id_email');
-        if (email) {
-            const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            if (!email.value.trim())
-                error('id_email', 'El correo es obligatorio.');
-            else if (!re.test(email.value.trim()))
-                error('id_email', 'Ingresa un correo electrónico válido.');
-        }
-
-        const pwd = document.getElementById('id_password');
-        const pwd2 = document.getElementById('id_password_confirm');
-        if (pwd && pwd.value.length < 8)
-            error('id_password', 'La contraseña debe tener al menos 8 caracteres.');
-        if (pwd2 && !pwd2.value)
-            error('id_password_confirm', 'Confirma tu contraseña.');
-        else if (pwd && pwd2 && pwd.value !== pwd2.value)
-            error('id_password_confirm', 'Las contraseñas no coinciden.');
-
-        const tel = document.getElementById('id_telefono');
-        if (tel && !tel.value.trim())
-            error('id_telefono', 'El teléfono es obligatorio.');
-
-        const dir = document.getElementById('id_direccion');
-        if (dir && !dir.value.trim())
-            error('id_direccion', 'La dirección es obligatoria.');
-
-        if (!valido) e.preventDefault();
     });
 
-    // Limpiar errores al escribir
-    document.querySelectorAll('#form-cliente input, #form-cliente textarea').forEach(function(el) {
-        el.addEventListener('input', function() {
-            this.classList.remove('is-invalid', 'js-invalid');
-            const baseId = this.id.replace('id_', '');
-            const errDiv = document.getElementById('err-' + baseId);
-            if (errDiv) errDiv.textContent = '';
-        });
-    });
 });
 </script>
 {% endblock %}

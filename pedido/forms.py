@@ -1,6 +1,6 @@
 from django import forms
 from .models import Cliente, Pedido
-
+import re
 
 class ClienteForm(forms.ModelForm):
     password = forms.CharField(
@@ -64,13 +64,23 @@ class ClienteForm(forms.ModelForm):
         return valor
 
     def clean_email(self):
-        email = self.cleaned_data.get('email', '').strip().lower()
-        # Al editar, excluir el propio registro
-        qs = Cliente.objects.filter(email=email)
-        if self.instance.pk:
-            qs = qs.exclude(pk=self.instance.pk)
-        if qs.exists():
-            raise forms.ValidationError('Ya existe un cliente registrado con este correo electrónico.')
+        email = self.cleaned_data['email'].strip()
+        usuario, _, dominio = email.partition('@')
+        partes_dominio = dominio.split('.')
+        dominio_base = partes_dominio[0] if partes_dominio else ''
+        tld = partes_dominio[-1] if partes_dominio else ''
+
+        if len(usuario) < 2:
+            raise forms.ValidationError('El nombre de usuario del correo es demasiado corto.')
+        if len(dominio_base) < 2:
+            raise forms.ValidationError('El dominio del correo no es válido.')
+        if dominio_base.isdigit():
+            raise forms.ValidationError('El dominio del correo no puede ser solo números.')
+        if not any(c.isalpha() for c in dominio_base):
+            raise forms.ValidationError('El dominio del correo no es válido.')
+        if len(tld) < 2:
+            raise forms.ValidationError('La extensión del correo no es válida.')
+
         return email
 
     def clean_direccion(self):
