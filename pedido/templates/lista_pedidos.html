@@ -144,35 +144,46 @@
                             <!-- Estado -->
                             <td>
                                 {% if es_despachador %}
-                                {# Despachador: puede cambiar entre en_transito y entregado #}
-                                <form method="post" action="{% url 'lista_pedidos' %}">
-                                    {% csrf_token %}
-                                    <input type="hidden" name="pedido_id" value="{{ pedido.pk }}">
-                                    <select name="nuevo_estado"
-                                            class="form-select form-select-sm"
-                                            style="min-width:130px;font-size:12px;"
-                                            onchange="this.form.submit()"
-                                            title="Cambiar estado">
-                                        {% if pedido.estado == 'en_transito' or pedido.estado == 'entregado' %}
-                                            <option value="en_transito" {% if pedido.estado == 'en_transito' %}selected{% endif %}>En tránsito</option>
-                                            <option value="entregado" {% if pedido.estado == 'entregado' %}selected{% endif %}>Entregado</option>
-                                        {% else %}
-                                            <option value="{{ pedido.estado }}" selected disabled>{{ pedido.get_estado_display }}</option>
-                                            <option value="en_transito">En tránsito</option>
-                                            <option value="entregado">Entregado</option>
-                                        {% endif %}
-                                    </select>
-                                </form>
+                                    {# Si el pago no está confirmado, mostrar badge bloqueado #}
+                                    {% if not pedido.pago_confirmado %}
+                                        <span class="badge-estado badge-pendiente" title="Confirma el pago antes de cambiar el estado">
+                                            <i class="fa fa-lock me-1"></i>{{ pedido.get_estado_display }}
+                                        </span>
+                                        <br><small class="text-danger" style="font-size:10px;"><i class="fa fa-exclamation-circle me-1"></i>Pago pendiente</small>
+                                    {% else %}
+                                        {# Pago confirmado: puede cambiar estado #}
+                                        <form method="post" action="{% url 'lista_pedidos' %}">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="pedido_id" value="{{ pedido.pk }}">
+                                            <select name="nuevo_estado"
+                                                    class="form-select form-select-sm"
+                                                    style="min-width:130px;font-size:12px;"
+                                                    onchange="this.form.submit()"
+                                                    title="Cambiar estado">
+                                                {% if pedido.estado == 'pendiente' %}
+                                                    <option value="pendiente" selected disabled>Pendiente</option>
+                                                    <option value="en_transito">En tránsito</option>
+                                                {% elif pedido.estado == 'en_transito' %}
+                                                    <option value="en_transito" selected>En tránsito</option>
+                                                    <option value="entregado">Entregado</option>
+                                                {% elif pedido.estado == 'entregado' %}
+                                                    <option value="entregado" selected disabled>Entregado</option>
+                                                {% else %}
+                                                    <option value="{{ pedido.estado }}" selected disabled>{{ pedido.get_estado_display }}</option>
+                                                {% endif %}
+                                            </select>
+                                        </form>
+                                    {% endif %}
                                 {% else %}
-                                {# Secretario: solo ve el estado como badge, no puede cambiarlo #}
-                                <span class="badge-estado
-                                    {% if pedido.estado == 'pendiente' %}badge-pendiente
-                                    {% elif pedido.estado == 'en_transito' %}badge-transito
-                                    {% elif pedido.estado == 'entregado' %}badge-entregado
-                                    {% else %}badge-cancelado{% endif %}">
-                                    <i class="fa {% if pedido.estado == 'pendiente' %}fa-clock{% elif pedido.estado == 'en_transito' %}fa-truck{% elif pedido.estado == 'entregado' %}fa-check{% else %}fa-times{% endif %} me-1"></i>
-                                    {{ pedido.get_estado_display }}
-                                </span>
+                                    {# Secretario: solo badge en lectura #}
+                                    <span class="badge-estado
+                                        {% if pedido.estado == 'pendiente' %}badge-pendiente
+                                        {% elif pedido.estado == 'en_transito' %}badge-transito
+                                        {% elif pedido.estado == 'entregado' %}badge-entregado
+                                        {% else %}badge-cancelado{% endif %}">
+                                        <i class="fa {% if pedido.estado == 'pendiente' %}fa-clock{% elif pedido.estado == 'en_transito' %}fa-truck{% elif pedido.estado == 'entregado' %}fa-check{% else %}fa-times{% endif %} me-1"></i>
+                                        {{ pedido.get_estado_display }}
+                                    </span>
                                 {% endif %}
                             </td>
 
@@ -198,10 +209,10 @@
                                             <input type="hidden" name="pedido_id" value="{{ pedido.pk }}">
                                             <input type="hidden" name="confirmar_pago" value="1">
                                             <button type="submit"
-                                                    class="btn btn-sm btn-success"
-                                                    title="Confirmar pago"
-                                                    onclick="return confirm('¿Confirmar el pago de este pedido?')">
-                                                <i class="fa fa-dollar-sign"></i>
+                                                    class="btn btn-sm btn-warning"
+                                                    title="Confirmar pago para poder cambiar estado"
+                                                    onclick="return confirm('¿Confirmar el pago de este pedido?\nEsto permitirá actualizar el estado del envío.')">
+                                                <i class="fa fa-dollar-sign me-1"></i><small>Confirmar pago</small>
                                             </button>
                                         </form>
                                         {% elif pedido.pago_confirmado %}

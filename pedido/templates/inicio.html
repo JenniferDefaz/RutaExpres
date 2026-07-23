@@ -2,20 +2,57 @@
 {% load static %}
 
 {% block contenido %}
-    <!-- Carousel Start -->
+
+    <!-- ══ CAROUSEL ══ -->
     <div class="container-fluid p-0 pb-5">
         <div class="owl-carousel header-carousel position-relative mb-5">
             <div class="owl-carousel-item position-relative">
-                <img class="img-fluid" src="{% static 'img/carousel-1.jpg' %}" alt="">
-                <div class="position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center" style="background: rgba(6, 3, 21, .5);">
+                <img class="img-fluid" src="{% static 'img/carousel-1.jpg' %}" alt="RutaExpres Envíos">
+                <div class="position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center" style="background:rgba(6, 3, 21, .5);">
                     <div class="container">
                         <div class="row justify-content-start">
                             <div class="col-10 col-lg-8">
-                                <h5 class="text-white text-uppercase mb-3 animated slideInDown">Centro de Soluciones Logísticas</h5>
-                                <h1 class="display-3 text-white animated slideInDown mb-4">Tu mejor aliado en <span class="text-primary">Envíos</span> y Mensajería</h1>
-                                <p class="fs-5 fw-medium text-white mb-4 pb-2">Entregamos tus documentos y paquetes con seguridad, rapidez y confianza a cualquier destino.</p>
-                                <a href="{% url 'registrar_pedido' %}" class="btn btn-primary py-md-3 px-md-5 me-3 animated slideInLeft">Realizar Envío</a>
-                                <a href="{% url 'rastrear_pedido' %}" class="btn btn-secondary py-md-3 px-md-5 animated slideInRight">Rastrear ahora</a>
+                                <h5 class="text-white text-uppercase mb-3 animated slideInDown">
+                                    <span class="badge bg-warning text-dark px-3 py-2">Centro de Soluciones Logísticas</span>
+                                </h5>
+                                <h1 class="display-3 text-white animated slideInDown mb-4">
+                                    Tu mejor aliado en <span class="text-warning">Envíos</span> y Mensajería
+                                </h1>
+                                <p class="fs-5 fw-medium text-white mb-4 pb-2">
+                                    Entregamos tus documentos y paquetes con seguridad, rapidez y confianza a cualquier destino.
+                                </p>
+                                <a href="{% url 'registrar_pedido' %}" class="btn btn-primary py-3 px-5 me-3 animated slideInLeft">
+                                    <i class="fa fa-box me-2"></i>Realizar Envío
+                                </a>
+                                <a href="{% url 'rastrear_pedido' %}" class="btn btn-warning py-3 px-5 animated slideInRight text-dark fw-semibold">
+                                    <i class="fa fa-search me-2"></i>Rastrear ahora
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="owl-carousel-item position-relative">
+                <img class="img-fluid" src="{% static 'img/carousel-2.jpg' %}" alt="RutaExpres Logística">
+                <div class="position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center" style="background:rgba(6, 3, 21, .5);">
+                    <div class="container">
+                        <div class="row justify-content-start">
+                            <div class="col-10 col-lg-8">
+                                <h5 class="text-white text-uppercase mb-3 animated slideInDown">
+                                    <span class="badge bg-warning text-dark px-3 py-2">Logística Internacional</span>
+                                </h5>
+                                <h1 class="display-3 text-white animated slideInDown mb-4">
+                                    Cobertura <span class="text-warning">Nacional</span> e Internacional
+                                </h1>
+                                <p class="fs-5 fw-medium text-white mb-4 pb-2">
+                                    Llegamos a cada rincón del país y del mundo con la mejor tecnología de seguimiento.
+                                </p>
+                                <a href="{% url 'registrar_cliente' %}" class="btn btn-primary py-3 px-5 me-3 animated slideInLeft">
+                                    <i class="fa fa-user-plus me-2"></i>Registrarse
+                                </a>
+                                <a href="{% url 'iniciar_sesion' %}" class="btn btn-outline-light py-3 px-5 animated slideInRight">
+                                    <i class="fa fa-sign-in-alt me-2"></i>Iniciar Sesión
+                                </a>
                             </div>
                         </div>
                     </div>
@@ -23,23 +60,31 @@
             </div>
         </div>
     </div>
-    <!-- Carousel End -->
 
-    <!-- Tracking Box Start -->
-    <div class="container-fluid wow fadeInUp" data-wow-delay="0.1s" style="margin-top: -100px; position: relative; z-index: 10;">
+    <!-- ══ CAJA DE RASTREO ══ -->
+    <div class="container-fluid wow fadeInUp" data-wow-delay="0.1s" style="margin-top:-80px;position:relative;z-index:10;">
         <div class="container">
-            <div class="bg-white shadow p-5">
-                <div class="row g-4 align-items-end">
+            <div class="bg-white shadow-lg p-4 p-md-5" style="border-radius:16px;border-top:4px solid var(--primary);">
+                <div class="row align-items-center">
                     <div class="col-lg-12">
-                        <h4 class="mb-4">Rastrea tu envío</h4>
+                        <h4 class="mb-1 fw-bold"><i class="fa fa-search-location text-primary me-2"></i>Rastrea tu envío</h4>
+                        <p class="text-muted mb-4">Ingresa el número de tracking para ver el estado de tu paquete en tiempo real.</p>
                         <form action="{% url 'rastrear_pedido' %}" method="post">
                             {% csrf_token %}
                             <div class="row g-3">
                                 <div class="col-md-9">
-                                    <input type="text" name="numero_tracking" class="form-control form-control-lg border-primary" placeholder="Ingresa tu número de tracking (ej. RE-XXXXXX)" required>
+                                    <input type="text" name="numero_tracking"
+                                           class="form-control form-control-lg border-2"
+                                           style="border-color:var(--primary);"
+                                           placeholder="Ej: RE-A1B2C3D4"
+                                           required
+                                           pattern="RE-[A-Z0-9]{8}"
+                                           title="Formato: RE-XXXXXXXX">
                                 </div>
                                 <div class="col-md-3">
-                                    <button class="btn btn-primary btn-lg w-100" type="submit">Buscar Pedido</button>
+                                    <button class="btn btn-primary btn-lg w-100" type="submit">
+                                        <i class="fa fa-search me-2"></i>Buscar
+                                    </button>
                                 </div>
                             </div>
                         </form>
@@ -48,77 +93,203 @@
             </div>
         </div>
     </div>
-    <!-- Tracking Box End -->
 
-
-    <!-- About Start -->
+    <!-- ══ SOBRE NOSOTROS ══ -->
     <div class="container-fluid overflow-hidden py-5 px-lg-0 mt-5">
         <div class="container about py-5 px-lg-0">
             <div class="row g-5 mx-lg-0">
-                <div class="col-lg-6 ps-lg-0 wow fadeInLeft" data-wow-delay="0.1s" style="min-height: 400px;">
+                <div class="col-lg-6 ps-lg-0 wow fadeInLeft" data-wow-delay="0.1s" style="min-height:420px;">
                     <div class="position-relative h-100">
-                        <img class="position-absolute img-fluid w-100 h-100" src="{% static 'img/about.jpg' %}" style="object-fit: cover;" alt="">
+                        <img class="position-absolute img-fluid w-100 h-100 img-bordered"
+                             src="{% static 'img/about.jpg' %}"
+                             style="object-fit:cover;"
+                             alt="Sobre RutaExpres">
                     </div>
                 </div>
                 <div class="col-lg-6 about-text wow fadeInUp" data-wow-delay="0.3s">
                     <h6 class="text-secondary text-uppercase mb-3">Sobre Nosotros</h6>
-                    <h1 class="mb-5">Soluciones Logísticas Rápidas y Seguras</h1>
-                    <p class="mb-5">Conecta tus ideas, negocios y familia a través de nuestra red logística. Nos encargamos de todo el proceso para que tus paquetes lleguen a tiempo y en perfectas condiciones.</p>
-                    <div class="row g-4 mb-5">
+                    <h1 class="mb-4">Soluciones Logísticas <span class="text-primary">Rápidas y Seguras</span></h1>
+                    <p class="mb-4">Conectamos tus ideas, negocios y familia a través de nuestra red logística. Nos encargamos de todo el proceso para que tus paquetes lleguen a tiempo y en perfectas condiciones.</p>
+                    <div class="row g-4 mb-4">
                         <div class="col-sm-6 wow fadeIn" data-wow-delay="0.5s">
-                            <i class="fa fa-globe fa-3x text-primary mb-3"></i>
-                            <h5>Cobertura Nacional e Internacional</h5>
-                            <p class="m-0">Llegamos a cada rincón del país y del mundo.</p>
+                            <div class="d-flex align-items-center gap-3">
+                                <div style="width:56px;height:56px;border-radius:12px;background:rgba(0,156,59,.1);display:flex;align-items:center;justify-content:center;">
+                                    <i class="fa fa-globe fa-2x text-primary"></i>
+                                </div>
+                                <div>
+                                    <h6 class="fw-bold mb-0">Cobertura Global</h6>
+                                    <small class="text-muted">Nacional e internacional</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-sm-6 wow fadeIn" data-wow-delay="0.6s">
+                            <div class="d-flex align-items-center gap-3">
+                                <div style="width:56px;height:56px;border-radius:12px;background:rgba(0,156,59,.1);display:flex;align-items:center;justify-content:center;">
+                                    <i class="fa fa-shipping-fast fa-2x text-primary"></i>
+                                </div>
+                                <div>
+                                    <h6 class="fw-bold mb-0">Entregas a Tiempo</h6>
+                                    <small class="text-muted">Cumplimos cada compromiso</small>
+                                </div>
+                            </div>
                         </div>
                         <div class="col-sm-6 wow fadeIn" data-wow-delay="0.7s">
-                            <i class="fa fa-shipping-fast fa-3x text-primary mb-3"></i>
-                            <h5>Entregas a Tiempo</h5>
-                            <p class="m-0">Garantizamos el cumplimiento de nuestros tiempos de entrega.</p>
+                            <div class="d-flex align-items-center gap-3">
+                                <div style="width:56px;height:56px;border-radius:12px;background:rgba(0,156,59,.1);display:flex;align-items:center;justify-content:center;">
+                                    <i class="fa fa-shield-alt fa-2x text-primary"></i>
+                                </div>
+                                <div>
+                                    <h6 class="fw-bold mb-0">Envíos Seguros</h6>
+                                    <small class="text-muted">Tu paquete protegido siempre</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-sm-6 wow fadeIn" data-wow-delay="0.8s">
+                            <div class="d-flex align-items-center gap-3">
+                                <div style="width:56px;height:56px;border-radius:12px;background:rgba(0,156,59,.1);display:flex;align-items:center;justify-content:center;">
+                                    <i class="fa fa-headset fa-2x text-primary"></i>
+                                </div>
+                                <div>
+                                    <h6 class="fw-bold mb-0">Soporte 24/7</h6>
+                                    <small class="text-muted">Siempre disponibles para ti</small>
+                                </div>
+                            </div>
                         </div>
                     </div>
+                    {% if not user.is_authenticated %}
+                    <a href="{% url 'registrar_cliente' %}" class="btn btn-primary px-5 py-3">
+                        <i class="fa fa-user-plus me-2"></i>Únete a RutaExpres
+                    </a>
+                    {% endif %}
                 </div>
             </div>
         </div>
     </div>
-    <!-- About End -->
 
-    <!-- Service Start -->
+    <!-- ══ SERVICIOS ══ -->
     <div class="container-xxl py-5">
         <div class="container py-5">
             <div class="text-center wow fadeInUp" data-wow-delay="0.1s">
                 <h6 class="text-secondary text-uppercase">Nuestros Servicios</h6>
-                <h1 class="mb-5">Explora nuestras soluciones</h1>
+                <h1 class="mb-5">Explora nuestras <span class="text-primary">soluciones logísticas</span></h1>
             </div>
             <div class="row g-4">
-                <div class="col-md-6 col-lg-4 wow fadeInUp" data-wow-delay="0.3s">
-                    <div class="service-item p-4">
-                        <div class="overflow-hidden mb-4">
-                            <img class="img-fluid" src="{% static 'img/service-1.jpg' %}" alt="">
+                <div class="col-md-6 col-lg-4 wow fadeInUp" data-wow-delay="0.2s">
+                    <div class="service-item p-4 text-center">
+                        <div class="overflow-hidden mb-4" style="border-radius:10px;">
+                            <img class="img-fluid img-bordered" src="{% static 'img/service-1.jpg' %}" alt="Transporte Aéreo">
                         </div>
                         <h4 class="mb-3">Transporte Aéreo</h4>
-                        <p>La opción más rápida para tus envíos urgentes a nivel nacional e internacional.</p>
+                        <p class="text-muted">La opción más rápida para tus envíos urgentes a nivel nacional e internacional.</p>
+                        <a href="{% url 'registrar_pedido' %}" class="btn btn-sm btn-outline-primary mt-2">
+                            <i class="fa fa-plus me-1"></i>Solicitar
+                        </a>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-4 wow fadeInUp" data-wow-delay="0.35s">
+                    <div class="service-item p-4 text-center">
+                        <div class="overflow-hidden mb-4" style="border-radius:10px;">
+                            <img class="img-fluid img-bordered" src="{% static 'img/service-2.jpg' %}" alt="Transporte Marítimo">
+                        </div>
+                        <h4 class="mb-3">Transporte Marítimo</h4>
+                        <p class="text-muted">Ideal para cargas grandes y pesadas con costos optimizados a nivel internacional.</p>
+                        <a href="{% url 'registrar_pedido' %}" class="btn btn-sm btn-outline-primary mt-2">
+                            <i class="fa fa-plus me-1"></i>Solicitar
+                        </a>
                     </div>
                 </div>
                 <div class="col-md-6 col-lg-4 wow fadeInUp" data-wow-delay="0.5s">
-                    <div class="service-item p-4">
-                        <div class="overflow-hidden mb-4">
-                            <img class="img-fluid" src="{% static 'img/service-2.jpg' %}" alt="">
-                        </div>
-                        <h4 class="mb-3">Transporte Marítimo</h4>
-                        <p>Ideal para cargas grandes y pesadas con costos optimizados.</p>
-                    </div>
-                </div>
-                <div class="col-md-6 col-lg-4 wow fadeInUp" data-wow-delay="0.7s">
-                    <div class="service-item p-4">
-                        <div class="overflow-hidden mb-4">
-                            <img class="img-fluid" src="{% static 'img/service-3.jpg' %}" alt="">
+                    <div class="service-item p-4 text-center">
+                        <div class="overflow-hidden mb-4" style="border-radius:10px;">
+                            <img class="img-fluid img-bordered" src="{% static 'img/service-3.jpg' %}" alt="Transporte Terrestre">
                         </div>
                         <h4 class="mb-3">Transporte Terrestre</h4>
-                        <p>Nuestra amplia flota de vehículos conecta todas las ciudades del país.</p>
+                        <p class="text-muted">Nuestra amplia flota de vehículos conecta todas las ciudades del país.</p>
+                        <a href="{% url 'registrar_pedido' %}" class="btn btn-sm btn-outline-primary mt-2">
+                            <i class="fa fa-plus me-1"></i>Solicitar
+                        </a>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-4 wow fadeInUp" data-wow-delay="0.2s">
+                    <div class="service-item p-4 text-center">
+                        <div class="overflow-hidden mb-4" style="border-radius:10px;">
+                            <img class="img-fluid img-bordered" src="{% static 'img/service-4.jpg' %}" alt="Carga Especial">
+                        </div>
+                        <h4 class="mb-3">Carga Especial</h4>
+                        <p class="text-muted">Manejo especializado para mercancías frágiles, peligrosas o de alto valor.</p>
+                        <a href="{% url 'registrar_pedido' %}" class="btn btn-sm btn-outline-primary mt-2">
+                            <i class="fa fa-plus me-1"></i>Solicitar
+                        </a>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-4 wow fadeInUp" data-wow-delay="0.35s">
+                    <div class="service-item p-4 text-center">
+                        <div class="overflow-hidden mb-4" style="border-radius:10px;">
+                            <img class="img-fluid img-bordered" src="{% static 'img/service-5.jpg' %}" alt="E-commerce">
+                        </div>
+                        <h4 class="mb-3">Soluciones E-commerce</h4>
+                        <p class="text-muted">Integra tu tienda online con nuestro sistema de logística y fulfillment.</p>
+                        <a href="{% url 'registrar_pedido' %}" class="btn btn-sm btn-outline-primary mt-2">
+                            <i class="fa fa-plus me-1"></i>Solicitar
+                        </a>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-4 wow fadeInUp" data-wow-delay="0.5s">
+                    <div class="service-item p-4 text-center">
+                        <div class="overflow-hidden mb-4" style="border-radius:10px;">
+                            <img class="img-fluid img-bordered" src="{% static 'img/service-6.jpg' %}" alt="Almacenamiento">
+                        </div>
+                        <h4 class="mb-3">Almacenamiento</h4>
+                        <p class="text-muted">Bodegaje seguro con control de inventario y despacho a tiempo.</p>
+                        <a href="{% url 'registrar_pedido' %}" class="btn btn-sm btn-outline-primary mt-2">
+                            <i class="fa fa-plus me-1"></i>Solicitar
+                        </a>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-    <!-- Service End -->
+
+    <!-- ══ CONTADOR DE ESTADÍSTICAS ══ -->
+    <div class="container-fluid py-5" style="background:linear-gradient(135deg,var(--dark),var(--primary));">
+        <div class="container">
+            <div class="row g-4 text-center text-white">
+                <div class="col-6 col-md-3 wow fadeInUp" data-wow-delay="0.1s">
+                    <i class="fa fa-box fa-3x mb-3 text-warning"></i>
+                    <h2 class="fw-bold counter">1500</h2>
+                    <p class="mb-0 opacity-75">Pedidos Completados</p>
+                </div>
+                <div class="col-6 col-md-3 wow fadeInUp" data-wow-delay="0.2s">
+                    <i class="fa fa-users fa-3x mb-3 text-warning"></i>
+                    <h2 class="fw-bold counter">850</h2>
+                    <p class="mb-0 opacity-75">Clientes Satisfechos</p>
+                </div>
+                <div class="col-6 col-md-3 wow fadeInUp" data-wow-delay="0.3s">
+                    <i class="fa fa-globe fa-3x mb-3 text-warning"></i>
+                    <h2 class="fw-bold counter">25</h2>
+                    <p class="mb-0 opacity-75">Países de Cobertura</p>
+                </div>
+                <div class="col-6 col-md-3 wow fadeInUp" data-wow-delay="0.4s">
+                    <i class="fa fa-award fa-3x mb-3 text-warning"></i>
+                    <h2 class="fw-bold counter">12</h2>
+                    <p class="mb-0 opacity-75">Años de Experiencia</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ══ LLAMADA A LA ACCIÓN ══ -->
+    {% if not user.is_authenticated %}
+    <div class="container py-5 text-center wow fadeInUp" data-wow-delay="0.1s">
+        <h2 class="mb-3">¿Listo para enviar tu paquete?</h2>
+        <p class="text-muted mb-4 fs-5">Regístrate gratis y comienza a usar nuestra plataforma hoy mismo.</p>
+        <a href="{% url 'registrar_cliente' %}" class="btn btn-primary btn-lg px-5 me-3">
+            <i class="fa fa-user-plus me-2"></i>Crear Cuenta
+        </a>
+        <a href="{% url 'iniciar_sesion' %}" class="btn btn-outline-primary btn-lg px-5">
+            <i class="fa fa-sign-in-alt me-2"></i>Ya tengo cuenta
+        </a>
+    </div>
+    {% endif %}
+
 {% endblock %}

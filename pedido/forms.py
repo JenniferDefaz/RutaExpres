@@ -136,22 +136,48 @@ class PedidoForm(forms.ModelForm):
             'estado': forms.Select(attrs={'class': 'form-select'}),
         }
 
+    def clean_destinatario(self):
+        valor = self.cleaned_data.get('destinatario', '').strip()
+        if not valor:
+            raise forms.ValidationError('El nombre del destinatario es obligatorio.')
+        if len(valor) < 2:
+            raise forms.ValidationError('El nombre del destinatario debe tener al menos 2 caracteres.')
+        if any(c.isdigit() for c in valor):
+            raise forms.ValidationError('El nombre del destinatario no puede contener números.')
+        return valor
+
+    def clean_descripcion_carga(self):
+        valor = self.cleaned_data.get('descripcion_carga', '').strip()
+        if not valor:
+            raise forms.ValidationError('La descripción de la carga es obligatoria.')
+        if len(valor) < 5:
+            raise forms.ValidationError('La descripción debe tener al menos 5 caracteres.')
+        return valor
+
     def clean_peso_kg(self):
         peso = self.cleaned_data.get('peso_kg')
-        if peso is not None and peso <= 0:
+        if peso is None:
+            raise forms.ValidationError('El peso es obligatorio.')
+        if peso <= 0:
             raise forms.ValidationError('El peso debe ser mayor que cero.')
+        if peso > 99999:
+            raise forms.ValidationError('El peso no puede superar 99,999 kg.')
         return peso
 
     def clean_origen(self):
         valor = self.cleaned_data.get('origen', '').strip()
         if not valor:
             raise forms.ValidationError('El origen no puede estar vacío.')
+        if len(valor) < 3:
+            raise forms.ValidationError('El origen debe tener al menos 3 caracteres.')
         return valor
 
     def clean_destino(self):
         valor = self.cleaned_data.get('destino', '').strip()
         if not valor:
             raise forms.ValidationError('El destino no puede estar vacío.')
+        if len(valor) < 3:
+            raise forms.ValidationError('El destino debe tener al menos 3 caracteres.')
         return valor
 
     def clean(self):

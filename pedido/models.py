@@ -61,9 +61,8 @@ class Pedido(models.Model):
         verbose_name='Número de tracking'
     )
     destinatario = models.CharField(
-        max_length=100, 
+        max_length=100,
         verbose_name='Nombre del destinatario',
-        default='Desconocido'
     )
     tipo_servicio = models.CharField(
         max_length=20,
