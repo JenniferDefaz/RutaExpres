@@ -249,7 +249,7 @@
                                         {% endif %}
                                     </p>
                                 </div>
-                                {% if pedido.comprobante_pago %}
+                                {% if pedido.comprobante_pago and pedido.metodo_pago != 'efectivo' %}
                                 <div class="col-12">
                                     <p class="text-muted small mb-2">Comprobante de pago</p>
                                     <a href="{{ pedido.comprobante_pago.url }}" target="_blank" class="btn btn-sm btn-outline-success">
