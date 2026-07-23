@@ -1,6 +1,7 @@
 from django import forms
 from .models import Cliente, Pedido
 import re
+import requests
 
 class ClienteForm(forms.ModelForm):
     password = forms.CharField(
@@ -179,6 +180,8 @@ class PedidoForm(forms.ModelForm):
             raise forms.ValidationError('El origen no puede estar vacío.')
         if len(valor) < 3:
             raise forms.ValidationError('El origen debe tener al menos 3 caracteres.')
+        if not _es_lugar_real(valor):
+            raise forms.ValidationError('No se encontró ese lugar. Ingresa una ciudad o dirección real.')
         return valor
 
     def clean_destino(self):
@@ -187,6 +190,8 @@ class PedidoForm(forms.ModelForm):
             raise forms.ValidationError('El destino no puede estar vacío.')
         if len(valor) < 3:
             raise forms.ValidationError('El destino debe tener al menos 3 caracteres.')
+        if not _es_lugar_real(valor):
+            raise forms.ValidationError('No se encontró ese lugar. Ingresa una ciudad o dirección real.')
         return valor
 
     def clean(self):
@@ -213,3 +218,17 @@ class BuscarPedidoForm(forms.Form):
         if not valor:
             raise forms.ValidationError('Ingrese un número de tracking.')
         return valor
+def _es_lugar_real(texto):
+    """Consulta OpenStreetMap Nominatim para verificar que el texto sea un lugar real."""
+    try:
+        resp = requests.get(
+            'https://nominatim.openstreetmap.org/search',
+            params={'q': texto, 'format': 'json', 'limit': 1},
+            headers={'User-Agent': 'RutaExpres-Django/1.0'},
+            timeout=5,
+        )
+        resp.raise_for_status()
+        return len(resp.json()) > 0
+    except Exception:
+        # Si el servicio falla o no hay internet, no bloqueamos al usuario
+        return True

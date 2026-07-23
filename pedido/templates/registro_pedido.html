@@ -306,5 +306,61 @@ document.querySelectorAll('#form-pedido input, #form-pedido select, #form-pedido
     el.addEventListener('change', function() { this.classList.remove('is-invalid','js-invalid'); });
     el.addEventListener('input',  function() { this.classList.remove('is-invalid','js-invalid'); });
 });
+// ---------- Validación en vivo: Destinatario (solo letras) ----------
+const destInput = document.getElementById('id_destinatario');
+if (destInput) {
+    destInput.addEventListener('input', function() {
+        const errDiv = document.getElementById('err-destinatario');
+        if (/\d/.test(this.value)) {
+            this.classList.add('is-invalid');
+            if (errDiv) { errDiv.textContent = 'No se permiten números, solo letras.'; errDiv.style.display = 'block'; }
+        } else if (!this.value.trim()) {
+            this.classList.remove('is-invalid');
+            if (errDiv) errDiv.textContent = '';
+        } else {
+            this.classList.remove('is-invalid');
+            if (errDiv) errDiv.textContent = '';
+        }
+    });
+}
+
+// ---------- Validación en vivo: Origen y Destino (lugar real vía OpenStreetMap) ----------
+function validarLugarReal(inputEl, errId) {
+    if (!inputEl) return;
+    const errDiv = document.getElementById(errId);
+
+    inputEl.addEventListener('blur', function() {
+        const valor = this.value.trim();
+        if (valor.length < 3) return; // ya lo cubre otra validación
+
+        if (errDiv) { errDiv.textContent = 'Verificando lugar...'; errDiv.style.display = 'block'; }
+        this.classList.remove('is-invalid');
+
+        fetch('https://nominatim.openstreetmap.org/search?format=json&limit=1&q=' + encodeURIComponent(valor))
+            .then(res => res.json())
+            .then(data => {
+                if (!data || data.length === 0) {
+                    inputEl.classList.add('is-invalid');
+                    if (errDiv) errDiv.textContent = 'No se encontró ese lugar. Ingresa una ciudad o dirección real.';
+                } else {
+                    inputEl.classList.remove('is-invalid');
+                    if (errDiv) errDiv.textContent = '';
+                }
+            })
+            .catch(() => {
+                // Si falla la conexión al servicio, no bloqueamos al usuario
+                if (errDiv) errDiv.textContent = '';
+            });
+    });
+
+    // Limpiar el error mientras escribe de nuevo
+    inputEl.addEventListener('input', function() {
+        this.classList.remove('is-invalid');
+        if (errDiv) errDiv.textContent = '';
+    });
+}
+
+validarLugarReal(document.getElementById('id_origen'), 'err-origen');
+validarLugarReal(document.getElementById('id_destino'), 'err-destino');
 </script>
 {% endblock %}
