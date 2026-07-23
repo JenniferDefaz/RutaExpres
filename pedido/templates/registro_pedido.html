@@ -192,7 +192,7 @@
 <script>
 $(document).ready(function() {
 
-    const tarifaKg = parseFloat('{{ tarifa_por_kg }}') || 2.50;
+    const tarifaKg = {{ tarifa_por_kg|default:"2.50" }};
 
     // Cotización automática al escribir el peso
     document.getElementById('id_peso_kg').addEventListener('input', function() {
