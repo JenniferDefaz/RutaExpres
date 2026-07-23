@@ -1,0 +1,80 @@
+{% extends 'secretario/base_panel.html' %}
+{% load static %}
+{% load rutaexpres_tags %}
+
+{% block panel_contenido %}
+<div class="container-fluid py-4">
+    <h2 class="mb-4"><i class="fas fa-user-plus text-primary"></i> {{ titulo }}</h2>
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <form id="formCliente" method="POST" novalidate>
+                {% csrf_token %}
+                <div class="row g-3">
+                    {% if not editando %}
+                    <div class="col-md-6">
+                        <label class="form-label">Usuario *</label>
+                        {{ form.username }}
+                        {% if form.username.errors %}<div class="text-danger small">{{ form.username.errors.0 }}</div>{% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Contraseña *</label>
+                        {{ form.password }}
+                        {% if form.password.errors %}<div class="text-danger small">{{ form.password.errors.0 }}</div>{% endif %}
+                    </div>
+                    {% endif %}
+                    <div class="col-md-6">
+                        <label class="form-label">Nombres *</label>
+                        {{ form.first_name }}
+                        {% if form.first_name.errors %}<div class="text-danger small">{{ form.first_name.errors.0 }}</div>{% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Apellidos *</label>
+                        {{ form.last_name }}
+                        {% if form.last_name.errors %}<div class="text-danger small">{{ form.last_name.errors.0 }}</div>{% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Email</label>
+                        {{ form.email }}
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Teléfono</label>
+                        {{ form.telefono }}
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Cédula</label>
+                        {{ form.cedula }}
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label">Dirección</label>
+                        {{ form.direccion }}
+                    </div>
+                </div>
+                <div class="mt-4">
+                    <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Guardar</button>
+                    <a href="{% url 'listar_clientes' %}" class="btn btn-secondary">Cancelar</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    $('#formCliente').validate({
+        rules: {
+            {% if not editando %}username: {required: true}, password: {required: true, minlength: 6},{% endif %}
+            first_name: {required: true}, last_name: {required: true}
+        },
+        messages: {
+            username: 'El usuario es obligatorio',
+            password: {required: 'La contraseña es obligatoria', minlength: 'Mínimo 6 caracteres'},
+            first_name: 'Los nombres son obligatorios',
+            last_name: 'Los apellidos son obligatorios'
+        },
+        errorClass: 'text-danger small', errorElement: 'div'
+    });
+});
+</script>
+{% endblock %}

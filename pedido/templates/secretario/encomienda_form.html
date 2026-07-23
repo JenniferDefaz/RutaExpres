@@ -1,0 +1,100 @@
+{% extends 'secretario/base_panel.html' %}
+{% load static %}
+{% load rutaexpres_tags %}
+
+{% block panel_contenido %}
+<div class="container-fluid py-4">
+    <h2 class="mb-4"><i class="fas fa-plus-circle text-primary"></i> Registrar Nueva Encomienda</h2>
+    <form id="formEncomienda" method="POST" novalidate>
+        {% csrf_token %}
+        <!-- Remitente -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-primary text-white"><i class="fas fa-user"></i> Datos del Remitente</div>
+            <div class="card-body">
+                <div class="col-md-12">
+                    <label class="form-label">Cliente (Remitente) *</label>
+                    {{ form.cliente }}
+                    {% if form.cliente.errors %}<div class="text-danger small">{{ form.cliente.errors.0 }}</div>{% endif %}
+                </div>
+            </div>
+        </div>
+        <!-- Destinatario -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-secondary text-white"><i class="fas fa-map-marker-alt"></i> Datos del Destinatario</div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Nombre Destinatario *</label>
+                        {{ form.nombre_destinatario }}
+                        {% if form.nombre_destinatario.errors %}<div class="text-danger small">{{ form.nombre_destinatario.errors.0 }}</div>{% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Teléfono Destinatario *</label>
+                        {{ form.telefono_destinatario }}
+                        {% if form.telefono_destinatario.errors %}<div class="text-danger small">{{ form.telefono_destinatario.errors.0 }}</div>{% endif %}
+                    </div>
+                    <div class="col-md-8">
+                        <label class="form-label">Dirección de Entrega *</label>
+                        {{ form.direccion_entrega }}
+                        {% if form.direccion_entrega.errors %}<div class="text-danger small">{{ form.direccion_entrega.errors.0 }}</div>{% endif %}
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Ciudad Destino *</label>
+                        {{ form.ciudad_destino }}
+                        {% if form.ciudad_destino.errors %}<div class="text-danger small">{{ form.ciudad_destino.errors.0 }}</div>{% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Paquete -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-dark text-white"><i class="fas fa-box"></i> Datos del Paquete</div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-12">
+                        <label class="form-label">Descripción del Paquete *</label>
+                        {{ form.descripcion_paquete }}
+                        {% if form.descripcion_paquete.errors %}<div class="text-danger small">{{ form.descripcion_paquete.errors.0 }}</div>{% endif %}
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Peso (kg)</label>
+                        {{ form.peso }}
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Valor Declarado ($)</label>
+                        {{ form.valor_declarado }}
+                    </div>
+                    <div class="col-md-12">
+                        <label class="form-label">Observaciones</label>
+                        {{ form.observaciones }}
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="text-end">
+            <a href="{% url 'listar_encomiendas' %}" class="btn btn-secondary me-2">Cancelar</a>
+            <button type="submit" class="btn btn-primary btn-lg"><i class="fas fa-save"></i> Registrar Encomienda</button>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    $('#formEncomienda').validate({
+        rules: {
+            cliente: {required: true}, ciudad_destino: {required: true},
+            nombre_destinatario: {required: true}, telefono_destinatario: {required: true},
+            direccion_entrega: {required: true}, descripcion_paquete: {required: true}
+        },
+        messages: {
+            cliente: 'Seleccione un cliente', ciudad_destino: 'Seleccione una ciudad',
+            nombre_destinatario: 'Ingrese el nombre', telefono_destinatario: 'Ingrese el teléfono',
+            direccion_entrega: 'Ingrese la dirección', descripcion_paquete: 'Ingrese la descripción'
+        },
+        errorClass: 'text-danger small', errorElement: 'div'
+    });
+});
+</script>
+{% endblock %}

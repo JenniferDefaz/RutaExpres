@@ -1,0 +1,236 @@
+{% if is_pdf %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Comprobante - {{ encomienda.numero_guia }}</title>
+<style>
+    body { font-family: Arial, sans-serif; font-size: 12px; color: #333; margin: 0; padding: 20px; }
+    .comprobante { max-width: 750px; margin: 0 auto; }
+    .header { border-bottom: 3px solid #06A3DA; padding-bottom: 15px; margin-bottom: 20px; overflow: hidden; }
+    .header-left { float: left; }
+    .header-right { float: right; text-align: right; }
+    .guia-box { text-align: center; border: 2px dashed #06A3DA; padding: 15px; margin: 20px 0; border-radius: 8px; }
+    .guia-box h2 { color: #06A3DA; margin: 5px 0 0 0; font-size: 28px; letter-spacing: 2px; }
+    .section { margin-bottom: 15px; }
+    .section-title { background: #06A3DA; color: white; padding: 8px 12px; font-weight: bold; font-size: 13px; margin-bottom: 0; }
+    .section-body { border: 1px solid #ddd; border-top: none; padding: 12px; }
+    table { width: 100%; border-collapse: collapse; }
+    td, th { padding: 6px 8px; text-align: left; }
+    .cost-table td { border-bottom: 1px solid #eee; }
+    .cost-table .total { border-top: 2px solid #06A3DA; font-size: 16px; font-weight: bold; }
+    .two-col { overflow: hidden; }
+    .two-col .col { float: left; width: 48%; }
+    .two-col .col:last-child { float: right; }
+    .info-box { background: #e8f4f8; border: 1px solid #b8daff; padding: 10px; margin: 15px 0; border-radius: 4px; font-size: 11px; }
+    .signature { margin-top: 50px; overflow: hidden; }
+    .signature .col { float: left; width: 45%; text-align: center; }
+    .signature .col:last-child { float: right; }
+    .signature .line { border-top: 1px solid #333; padding-top: 5px; margin-top: 40px; }
+</style>
+</head>
+<body>
+{% else %}
+{% extends 'plantillaPrin.html' %}
+{% load static %}
+{% load rutaexpres_tags %}
+{% block page_title %}Comprobante - {{ encomienda.numero_guia }}{% endblock %}
+{% block contenido %}
+<style>
+    @media print { .no-print, .navbar, .footer, .back-to-top, #spinner, footer { display: none !important; } .comprobante { box-shadow: none !important; } }
+</style>
+{% endif %}
+
+<div class="{% if not is_pdf %}container py-5{% endif %}">
+<div class="comprobante {% if not is_pdf %}bg-white shadow-lg p-4 p-md-5{% endif %}" style="max-width: 800px; margin: 0 auto;">
+
+    <!-- Header -->
+    <div class="header{% if not is_pdf %} row align-items-center pb-3 mb-4{% endif %}" style="{% if not is_pdf %}border-bottom: 3px solid #06A3DA;{% endif %}">
+        {% if is_pdf %}
+        <div class="header-left">
+            <img src="{% static 'img/logo.png' %}" alt="RutaExpres" style="height: 40px; margin-bottom: 10px;">
+            <p style="margin: 2px 0;">Servicio de Encomiendas</p>
+            <small>Av. Principal s/n | Tel: (02) 123-4567<br>Email: info@rutaexpres.com</small>
+        </div>
+        <div class="header-right">
+            <h3 style="margin: 0;">COMPROBANTE DE ENVÍO</h3>
+            <p style="margin: 5px 0;"><strong>Fecha:</strong> {{ encomienda.fecha_registro|date:'d/m/Y H:i' }}</p>
+        </div>
+        {% else %}
+        <div class="col-6">
+            <img src="{% static 'img/logo.png' %}" alt="RutaExpres" style="height: 45px; margin-bottom: 5px;">
+            <p class="text-muted mb-0">Servicio de Encomiendas</p>
+            <small>Av. Principal s/n | Tel: (02) 123-4567<br>Email: info@rutaexpres.com</small>
+        </div>
+        <div class="col-6 text-end">
+            <h4>COMPROBANTE DE ENVÍO</h4>
+            <p class="mb-0"><strong>Fecha:</strong> {{ encomienda.fecha_registro|date:'d/m/Y H:i' }}</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Tracking Code -->
+    <div class="guia-box" {% if not is_pdf %}style="border: 2px dashed #06A3DA; border-radius: 10px; padding: 15px; margin: 20px 0; text-align: center;"{% endif %}>
+        <small {% if not is_pdf %}class="text-muted d-block"{% endif %} style="{% if is_pdf %}color: #888;{% endif %}">NÚMERO DE GUÍA / CÓDIGO DE RASTREO</small>
+        <h2 {% if not is_pdf %}class="text-primary mb-0"{% endif %} style="{% if is_pdf %}color: #06A3DA; font-size: 28px; letter-spacing: 2px; margin: 5px 0 0;{% else %}letter-spacing: 2px;{% endif %}">{{ encomienda.numero_guia }}</h2>
+    </div>
+
+    <!-- Sender & Recipient -->
+    {% if is_pdf %}
+    <div class="two-col">
+        <div class="col">
+            <div class="section">
+                <div class="section-title"><span>&#128100;</span> REMITENTE</div>
+                <div class="section-body">
+                    <p><strong>Nombre:</strong> {{ encomienda.cliente.usuario.get_full_name }}<br>
+                    <strong>Teléfono:</strong> {{ encomienda.cliente.telefono|default:'-' }}<br>
+                    <strong>Cédula:</strong> {{ encomienda.cliente.cedula|default:'-' }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col">
+            <div class="section">
+                <div class="section-title"><span>&#128205;</span> DESTINATARIO</div>
+                <div class="section-body">
+                    <p><strong>Nombre:</strong> {{ encomienda.nombre_destinatario }}<br>
+                    <strong>Teléfono:</strong> {{ encomienda.telefono_destinatario }}<br>
+                    <strong>Dirección:</strong> {{ encomienda.direccion_entrega }}<br>
+                    <strong>Ciudad:</strong> {{ encomienda.ciudad_destino.nombre }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-primary text-white"><i class="fas fa-user"></i> REMITENTE</div>
+                <div class="card-body">
+                    <p><strong>Nombre:</strong> {{ encomienda.cliente.usuario.get_full_name }}</p>
+                    <p><strong>Teléfono:</strong> {{ encomienda.cliente.telefono|default:'-' }}</p>
+                    <p class="mb-0"><strong>Cédula:</strong> {{ encomienda.cliente.cedula|default:'-' }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-secondary text-white"><i class="fas fa-map-marker-alt"></i> DESTINATARIO</div>
+                <div class="card-body">
+                    <p><strong>Nombre:</strong> {{ encomienda.nombre_destinatario }}</p>
+                    <p><strong>Teléfono:</strong> {{ encomienda.telefono_destinatario }}</p>
+                    <p><strong>Dirección:</strong> {{ encomienda.direccion_entrega }}</p>
+                    <p class="mb-0"><strong>Ciudad:</strong> {{ encomienda.ciudad_destino.nombre }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Package Detail -->
+    {% if is_pdf %}
+    <div class="section">
+        <div class="section-title"><span>&#128230;</span> DETALLE DEL PAQUETE</div>
+        <div class="section-body">
+            <table><tr><th>Descripción</th><td>{{ encomienda.descripcion_paquete }}</td></tr>
+            <tr><th>Peso</th><td>{{ encomienda.peso|default:'No especificado' }} kg</td></tr>
+            <tr><th>Valor Declarado</th><td>${{ encomienda.valor_declarado|default:'0.00' }}</td></tr></table>
+        </div>
+    </div>
+    {% else %}
+    <div class="card mb-4">
+        <div class="card-header bg-dark text-white"><i class="fas fa-box"></i> DETALLE DEL PAQUETE</div>
+        <div class="card-body">
+            <table class="table table-bordered mb-0">
+                <tr><th style="width:30%">Descripción</th><td>{{ encomienda.descripcion_paquete }}</td></tr>
+                <tr><th>Peso</th><td>{{ encomienda.peso|default:'No especificado' }} kg</td></tr>
+                <tr><th>Valor Declarado</th><td>${{ encomienda.valor_declarado|default:'0.00' }}</td></tr>
+            </table>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Costs -->
+    {% if is_pdf %}
+    <div class="section">
+        <div class="section-title" style="background: #28a745;"><span>&#128176;</span> DETALLE DE COSTOS</div>
+        <div class="section-body">
+            <table class="cost-table">
+                <tr><td>Tarifa Base ({{ encomienda.ciudad_destino.nombre }})</td><td style="text-align:right"><strong>${{ encomienda.costo_envio }}</strong></td></tr>
+                <tr class="total"><td>TOTAL A PAGAR</td><td style="text-align:right">${{ encomienda.costo_envio }}</td></tr>
+            </table>
+        </div>
+    </div>
+    {% else %}
+    <div class="card mb-4">
+        <div class="card-header bg-success text-white"><i class="fas fa-dollar-sign"></i> DETALLE DE COSTOS</div>
+        <div class="card-body">
+            <table class="table mb-0">
+                <tr><td>Tarifa Base ({{ encomienda.ciudad_destino.nombre }})</td><td class="text-end"><strong>${{ encomienda.costo_envio }}</strong></td></tr>
+                <tr class="table-success"><td><strong>TOTAL A PAGAR</strong></td><td class="text-end"><h4 class="mb-0">${{ encomienda.costo_envio }}</h4></td></tr>
+            </table>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Tracking Info -->
+    <div class="{% if is_pdf %}info-box{% else %}alert alert-info{% endif %}">
+        {% if not is_pdf %}<i class="fas fa-info-circle"></i>{% endif %}
+        <strong>Consulte el estado de su envío en cualquier momento:</strong><br>
+        Ingrese a <strong>www.rutaexpres.com/rastreo/</strong> y escriba su código: <strong>{{ encomienda.numero_guia }}</strong>
+    </div>
+
+    <!-- Signatures -->
+    {% if is_pdf %}
+    <div class="signature">
+        <div class="col"><div class="line">Firma del Remitente</div></div>
+        <div class="col"><div class="line">Firma del Secretario<br><small>{{ encomienda.secretario_registro.get_full_name }}</small></div></div>
+    </div>
+    {% else %}
+    <div class="row mt-5 mb-4">
+        <div class="col-6 text-center"><div style="border-top: 1px solid #000; width: 80%; margin: 0 auto; padding-top: 5px;"><small>Firma del Remitente</small></div></div>
+        <div class="col-6 text-center"><div style="border-top: 1px solid #000; width: 80%; margin: 0 auto; padding-top: 5px;"><small>Firma del Secretario</small><br><small class="text-muted">{{ encomienda.secretario_registro.get_full_name }}</small></div></div>
+    </div>
+    {% endif %}
+
+    {% if not is_pdf %}
+    <!-- Action Buttons -->
+    <div class="text-center mt-4 no-print">
+        <a href="{% url 'descargar_comprobante_pdf' encomienda.pk %}" class="btn btn-danger btn-lg me-2"><i class="fas fa-file-pdf"></i> Descargar PDF</a>
+        <button onclick="enviarEmail({{ encomienda.pk }})" class="btn btn-primary btn-lg me-2"><i class="fas fa-envelope"></i> Enviar por Email</button>
+        <button onclick="window.print()" class="btn btn-secondary btn-lg"><i class="fas fa-print"></i> Imprimir</button>
+    </div>
+    {% endif %}
+
+</div>
+</div>
+
+{% if is_pdf %}
+</body>
+</html>
+{% else %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function enviarEmail(pk) {
+    Swal.fire({
+        title: '¿Enviar comprobante por email?',
+        text: 'Se enviará el comprobante al correo del cliente',
+        icon: 'question', showCancelButton: true,
+        confirmButtonText: 'Sí, enviar', cancelButtonText: 'Cancelar'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            Swal.fire({title: 'Enviando...', allowOutsideClick: false, didOpen: () => Swal.showLoading()});
+            fetch(`/secretario/encomiendas/${pk}/comprobante/email/`, {
+                method: 'POST',
+                headers: {'X-CSRFToken': '{{ csrf_token }}'}
+            })
+            .then(response => response.json())
+            .then(data => { Swal.fire(data.success ? '¡Enviado!' : 'Error', data.message, data.success ? 'success' : 'error'); })
+            .catch(() => { Swal.fire('Error', 'No se pudo enviar el email', 'error'); });
+        }
+    });
+}
+</script>
+{% endblock %}
+{% endif %}

@@ -1,0 +1,72 @@
+{% extends 'plantillaPrin.html' %}
+{% load static %}
+{% block page_title %}Iniciar Sesión - RutaExpres{% endblock %}
+
+{% block contenido %}
+<div class="container-xxl py-5">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-5">
+                <div class="card shadow-lg border-0 rounded-lg mt-5">
+                    <div class="card-header bg-primary text-white text-center py-4">
+                        <div class="text-center mb-4">
+                            <img src="{% static 'img/logo.png' %}" alt="RutaExpres" style="height: 60px;">
+                        </div>
+                        <p class="mb-0">Iniciar Sesión</p>
+                    </div>
+                    <div class="card-body p-5">
+                        <form id="loginForm" method="POST" action="{% url 'login' %}">
+                            {% csrf_token %}
+                            {% if form.errors %}
+                                <div class="alert alert-danger">Usuario o contraseña incorrectos.</div>
+                            {% endif %}
+                            <div class="form-floating mb-3">
+                                {{ form.username }}
+                                <label for="{{ form.username.id_for_label }}"><i class="fas fa-user text-muted me-2"></i>Usuario</label>
+                            </div>
+                            <div class="form-floating mb-3">
+                                {{ form.password }}
+                                <label for="{{ form.password.id_for_label }}"><i class="fas fa-lock text-muted me-2"></i>Contraseña</label>
+                            </div>
+                            <div class="d-grid gap-2 mt-4">
+                                <button type="submit" class="btn btn-primary btn-lg">Entrar</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    $('input[name="username"]').addClass('form-control').attr('placeholder', 'Usuario');
+    $('input[name="password"]').addClass('form-control').attr('placeholder', 'Contraseña');
+    
+    $('#loginForm').validate({
+        rules: {
+            username: { required: true },
+            password: { required: true }
+        },
+        messages: {
+            username: { required: "Por favor, ingrese su usuario." },
+            password: { required: "Por favor, ingrese su contraseña." }
+        },
+        errorElement: 'span',
+        errorPlacement: function (error, element) {
+            error.addClass('invalid-feedback');
+            element.closest('.form-floating').append(error);
+        },
+        highlight: function (element, errorClass, validClass) {
+            $(element).addClass('is-invalid');
+        },
+        unhighlight: function (element, errorClass, validClass) {
+            $(element).removeClass('is-invalid');
+        }
+    });
+});
+</script>
+{% endblock %}

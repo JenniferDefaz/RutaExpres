@@ -1,0 +1,95 @@
+{% extends '../plantillaPrin.html' %}
+{% load static %}
+{% load rutaexpres_tags %}
+
+{% block page_title %}Resultado de Rastreo{% endblock %}
+
+{% block extra_css %}
+<style>
+    .timeline { position: relative; padding-left: 30px; margin-top: 20px; }
+    .timeline::before { content: ''; position: absolute; left: 10px; top: 0; bottom: 0; width: 2px; background: #dee2e6; }
+    .timeline-item { position: relative; padding-bottom: 30px; }
+    .timeline-item:last-child { padding-bottom: 0; }
+    .timeline-item .timeline-dot { 
+        position: absolute; left: -26px; top: 5px; width: 14px; height: 14px; 
+        border-radius: 50%; z-index: 2; border: 2px solid white;
+    }
+    .timeline-dot.completed { background: #28a745; }
+    .timeline-dot.current { background: #06A3DA; box-shadow: 0 0 0 4px rgba(6,163,218,0.3); animation: pulse 2s infinite; }
+    .timeline-dot.pending { background: #dee2e6; }
+    .timeline-dot.error { background: #dc3545; }
+    
+    @keyframes pulse {
+        0% { box-shadow: 0 0 0 0 rgba(6,163,218,0.4); }
+        70% { box-shadow: 0 0 0 10px rgba(6,163,218,0); }
+        100% { box-shadow: 0 0 0 0 rgba(6,163,218,0); }
+    }
+</style>
+{% endblock %}
+
+{% block contenido %}
+<div class="container-fluid py-5 bg-light">
+    <div class="container">
+        <div class="text-center mb-5 wow fadeInUp" data-wow-delay="0.1s">
+            <h6 class="text-secondary text-uppercase">Estado de su Envío</h6>
+            <h1 class="display-4 text-primary fw-bold mb-3">{{ encomienda.numero_guia }}</h1>
+            <div class="fs-4">{{ encomienda.estado|badge_estado|safe }}</div>
+        </div>
+
+        <div class="row justify-content-center">
+            <div class="col-lg-8 wow fadeInUp" data-wow-delay="0.3s">
+                <div class="card border-0 shadow rounded overflow-hidden">
+                    <div class="row g-0">
+                        <div class="col-md-5 bg-primary text-white p-4 d-flex flex-column justify-content-center">
+                            <h4 class="text-white mb-4 border-bottom border-light pb-2">Información General</h4>
+                            
+                            <div class="mb-3">
+                                <small class="text-white-50 d-block">Destino</small>
+                                <span class="fs-5 fw-bold">{{ encomienda.ciudad_destino.nombre }}</span>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <small class="text-white-50 d-block">Destinatario</small>
+                                <span class="fs-5 fw-bold">{{ encomienda.nombre_destinatario|slice:":15" }}...</span>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <small class="text-white-50 d-block">Fecha de Registro</small>
+                                <span>{{ encomienda.fecha_registro|date:'d/m/Y' }}</span>
+                            </div>
+                            
+                            <div class="mt-4 pt-3 border-top border-light text-center">
+                                <a href="{% url 'rastreo_publico' %}" class="btn btn-outline-light rounded-pill px-4">
+                                    Nueva Búsqueda
+                                </a>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-7 p-4 p-lg-5">
+                            <h5 class="mb-4 text-secondary">Ruta del Paquete</h5>
+                            <div class="timeline">
+                                {% for estado_info in historial_completo %}
+                                    <div class="timeline-item">
+                                        <div class="timeline-dot {{ estado_info.status_class }}"></div>
+                                        <div class="ps-3">
+                                            <h6 class="mb-1 {% if estado_info.status_class == 'pending' %}text-muted{% endif %}">
+                                                {{ estado_info.nombre }}
+                                            </h6>
+                                            {% if estado_info.fecha %}
+                                                <p class="text-muted small mb-1">{{ estado_info.fecha|date:'d M Y, H:i' }}</p>
+                                            {% endif %}
+                                            {% if estado_info.comentario %}
+                                                <p class="mb-0 text-secondary bg-light p-2 rounded small mt-1">{{ estado_info.comentario }}</p>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
