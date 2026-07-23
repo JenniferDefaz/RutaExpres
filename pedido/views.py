@@ -3,18 +3,11 @@ from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User, Group
 from django.contrib.auth.decorators import login_required
-from django.core.mail import send_mail, EmailMessage
+from django.core.mail import send_mail
 from django.conf import settings
 from django.http import HttpResponse
-
-import qrcode
-import io
-from reportlab.lib.pagesizes import A4
-from reportlab.lib import colors
-from reportlab.lib.units import cm
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Image, Table, TableStyle
-from reportlab.lib.styles import ParagraphStyle
-from reportlab.lib.enums import TA_CENTER, TA_LEFT
+from django.db.models import Sum, Count
+import json
 
 from .models import Cliente, Pedido
 from .forms import ClienteForm, PedidoForm, BuscarPedidoForm
@@ -27,7 +20,7 @@ def _get_or_create_group(name):
 
 
 def _enviar_bienvenida(cliente):
-    """Envía correo de bienvenida al cliente recién registrado."""
+    """Correo #1 — Bienvenida al cliente registrado."""
     try:
         send_mail(
             subject='¡Bienvenido a RutaExpres - Centro de Soluciones!',
@@ -50,51 +43,65 @@ def _enviar_bienvenida(cliente):
 
 
 def _enviar_confirmacion_pedido(pedido):
-    """Envía correo de confirmación con PDF adjunto cuando se registra un pedido."""
+    """Correo #2 — Confirmación al crear un pedido con todos sus datos."""
     try:
-        pdf_bytes = _generar_pdf_pedido(pedido)
-        email = EmailMessage(
-            subject=f'Pedido registrado — Tracking: {pedido.numero_tracking}',
-            body=(
+        precio_texto = f'${pedido.precio_envio}' if pedido.precio_envio else 'Por calcular'
+        send_mail(
+            subject=f'[RutaExpres] Pedido registrado — Tracking: {pedido.numero_tracking}',
+            message=(
                 f'Hola {pedido.cliente.nombre} {pedido.cliente.apellido},\n\n'
                 f'Tu pedido ha sido registrado exitosamente en RutaExpres.\n\n'
-                f'--- DETALLES DEL PEDIDO ---\n'
-                f'Número de tracking : {pedido.numero_tracking}\n'
-                f'Destinatario       : {pedido.destinatario}\n'
-                f'Tipo de servicio   : {pedido.get_tipo_servicio_display()}\n'
-                f'Origen             : {pedido.origen}\n'
-                f'Destino            : {pedido.destino}\n'
-                f'Peso               : {pedido.peso_kg} kg\n'
-                f'Estado actual      : {pedido.get_estado_display()}\n\n'
-                f'Adjunto encontrará su orden de envío en PDF con código QR.\n'
-                f'Puede rastrear su envío en cualquier momento con el número de tracking.\n\n'
+                f'━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n'
+                f'  DETALLES DEL PEDIDO\n'
+                f'━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n'
+                f'  Tracking        : {pedido.numero_tracking}\n'
+                f'  Destinatario    : {pedido.destinatario}\n'
+                f'  Tipo de servicio: {pedido.get_tipo_servicio_display()}\n'
+                f'  Origen          : {pedido.origen}\n'
+                f'  Destino         : {pedido.destino}\n'
+                f'  Peso            : {pedido.peso_kg} kg\n'
+                f'  Precio estimado : {precio_texto}\n'
+                f'  Estado          : {pedido.get_estado_display()}\n'
+                f'  Fecha           : {pedido.fecha_creacion.strftime("%d/%m/%Y %H:%M")}\n'
+                f'━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n'
+                f'Puedes rastrear tu envío en cualquier momento con el\n'
+                f'número de tracking en nuestra página web.\n\n'
+                f'Contáctanos:\n'
+                f'  Tel  : +593 2 345 6789\n'
+                f'  Email: info@rutaexpres.com.ec\n\n'
                 f'Saludos,\n'
-                f'El equipo de RutaExpres\n'
-                f'Tel: +593 2 345 6789 | info@rutaexpres.com.ec'
+                f'El equipo de RutaExpres'
             ),
             from_email=settings.DEFAULT_FROM_EMAIL,
-            to=[pedido.cliente.email],
+            recipient_list=[pedido.cliente.email],
+            fail_silently=True,
         )
-        email.attach(f'orden_{pedido.numero_tracking}.pdf', pdf_bytes, 'application/pdf')
-        email.send()
     except Exception:
         pass
 
 
 def _enviar_notificacion_entrega(pedido):
-    """Envía correo cuando el pedido cambia a estado 'entregado'."""
+    """Correo #3 — Notificación cuando el pedido es entregado."""
     try:
         send_mail(
-            subject=f'¡Tu pedido {pedido.numero_tracking} fue entregado!',
+            subject=f'[RutaExpres] ¡Tu pedido {pedido.numero_tracking} fue entregado!',
             message=(
                 f'Hola {pedido.cliente.nombre} {pedido.cliente.apellido},\n\n'
-                f'Tu pedido con número de tracking {pedido.numero_tracking} '
-                f'ha sido entregado exitosamente a {pedido.destinatario}.\n\n'
-                f'Destino: {pedido.destino}\n\n'
+                f'Nos complace informarte que tu pedido fue entregado exitosamente.\n\n'
+                f'━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n'
+                f'  CONFIRMACIÓN DE ENTREGA\n'
+                f'━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n'
+                f'  Tracking     : {pedido.numero_tracking}\n'
+                f'  Destinatario : {pedido.destinatario}\n'
+                f'  Destino      : {pedido.destino}\n'
+                f'  Entregado el : {pedido.fecha_actualizacion.strftime("%d/%m/%Y %H:%M")}\n'
+                f'━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n'
                 f'Gracias por confiar en RutaExpres para tus envíos.\n\n'
+                f'Contáctanos:\n'
+                f'  Tel  : +593 2 345 6789\n'
+                f'  Email: info@rutaexpres.com.ec\n\n'
                 f'Saludos,\n'
-                f'El equipo de RutaExpres\n'
-                f'Tel: +593 2 345 6789 | info@rutaexpres.com.ec'
+                f'El equipo de RutaExpres'
             ),
             from_email=settings.DEFAULT_FROM_EMAIL,
             recipient_list=[pedido.cliente.email],
@@ -107,6 +114,114 @@ def _enviar_notificacion_entrega(pedido):
 def inicio(request):
     """Vista de la página principal."""
     return render(request, 'inicio.html')
+
+
+@login_required(login_url='iniciar_sesion')
+def dashboard(request):
+    """
+    Dashboard personalizado por rol:
+    - Secretario/staff: estadísticas globales + gráficos
+    - Despachador: resumen de sus pedidos asignados
+    - Cliente: resumen de sus propios pedidos
+    """
+    es_secretario = (
+        request.user.is_staff
+        or request.user.groups.filter(name='Secretario').exists()
+    )
+    es_despachador = request.user.groups.filter(name='Despachador').exists()
+
+    # ── Secretario ──────────────────────────────────────────
+    if es_secretario:
+        pedidos = Pedido.objects.select_related('cliente').all()
+        total = pedidos.count()
+        pendientes = pedidos.filter(estado='pendiente').count()
+        en_transito = pedidos.filter(estado='en_transito').count()
+        entregados = pedidos.filter(estado='entregado').count()
+        cancelados = pedidos.filter(estado='cancelado').count()
+        ingresos = pedidos.exclude(precio_envio__isnull=True).aggregate(
+            total=Sum('precio_envio')
+        )['total'] or 0
+        total_clientes = Cliente.objects.count()
+
+        # Datos para gráfico: distribución por estado
+        etiquetas_estado = ['Pendiente', 'En Tránsito', 'Entregado', 'Cancelado']
+        datos_estado = [pendientes, en_transito, entregados, cancelados]
+
+        # Datos para gráfico: distribución por tipo de servicio
+        servicios = pedidos.values('tipo_servicio').annotate(total=Count('id'))
+        etiquetas_servicio = [s['tipo_servicio'].capitalize() for s in servicios]
+        datos_servicio = [s['total'] for s in servicios]
+
+        # Últimos 5 pedidos recientes
+        pedidos_recientes = pedidos.order_by('-fecha_creacion')[:5]
+
+        # Despachadores disponibles
+        grupo_d = Group.objects.filter(name='Despachador').first()
+        despachadores = grupo_d.user_set.all() if grupo_d else []
+
+        return render(request, 'dashboard_secretario.html', {
+            'total': total,
+            'pendientes': pendientes,
+            'en_transito': en_transito,
+            'entregados': entregados,
+            'cancelados': cancelados,
+            'ingresos': ingresos,
+            'total_clientes': total_clientes,
+            'pedidos_recientes': pedidos_recientes,
+            'etiquetas_estado_json': json.dumps(etiquetas_estado),
+            'datos_estado_json': json.dumps(datos_estado),
+            'etiquetas_servicio_json': json.dumps(etiquetas_servicio),
+            'datos_servicio_json': json.dumps(datos_servicio),
+            'despachadores': despachadores,
+        })
+
+    # ── Despachador ─────────────────────────────────────────
+    elif es_despachador:
+        pedidos = Pedido.objects.select_related('cliente').filter(despachador=request.user)
+        total = pedidos.count()
+        pendientes = pedidos.filter(estado='pendiente').count()
+        en_transito = pedidos.filter(estado='en_transito').count()
+        entregados = pedidos.filter(estado='entregado').count()
+        cancelados = pedidos.filter(estado='cancelado').count()
+
+        etiquetas_estado = ['Pendiente', 'En Tránsito', 'Entregado', 'Cancelado']
+        datos_estado = [pendientes, en_transito, entregados, cancelados]
+        pedidos_recientes = pedidos.order_by('-fecha_creacion')[:5]
+
+        return render(request, 'dashboard_despachador.html', {
+            'total': total,
+            'pendientes': pendientes,
+            'en_transito': en_transito,
+            'entregados': entregados,
+            'cancelados': cancelados,
+            'pedidos_recientes': pedidos_recientes,
+            'etiquetas_estado_json': json.dumps(etiquetas_estado),
+            'datos_estado_json': json.dumps(datos_estado),
+        })
+
+    # ── Cliente ──────────────────────────────────────────────
+    else:
+        if not hasattr(request.user, 'cliente'):
+            messages.error(request, 'No tienes un perfil de cliente asociado.')
+            return redirect('inicio')
+
+        pedidos = request.user.cliente.pedidos.all()
+        total = pedidos.count()
+        pendientes = pedidos.filter(estado='pendiente').count()
+        en_transito = pedidos.filter(estado='en_transito').count()
+        entregados = pedidos.filter(estado='entregado').count()
+        cancelados = pedidos.filter(estado='cancelado').count()
+        pedidos_recientes = pedidos.order_by('-fecha_creacion')[:5]
+
+        return render(request, 'dashboard_cliente.html', {
+            'total': total,
+            'pendientes': pendientes,
+            'en_transito': en_transito,
+            'entregados': entregados,
+            'cancelados': cancelados,
+            'pedidos': pedidos,
+            'pedidos_recientes': pedidos_recientes,
+        })
 
 
 def registrar_cliente(request):
@@ -263,16 +378,23 @@ def lista_pedidos(request):
             try:
                 pedido = Pedido.objects.select_related('cliente').get(pk=pedido_id)
 
-                # Despachador solo puede cambiar SUS pedidos asignados
+                # Secretario SOLO puede asignar despachador (manejado en asignar_despachador)
+                # Despachador puede cambiar estado y confirmar pago de SUS pedidos asignados
                 if es_despachador and pedido.despachador != request.user:
                     messages.error(request, 'No tienes permiso para modificar este pedido.')
-                elif confirmar_pago and es_secretario:
-                    pedido.pago_confirmado = True
-                    pedido.save()
-                    messages.success(request, f'Pago confirmado para el pedido {pedido.numero_tracking}.')
-                elif nuevo_estado in estados_validos:
-                    if es_despachador and nuevo_estado not in estados_despachador:
-                        messages.error(request, 'Solo puedes cambiar a En Tránsito o Entregado.')
+                elif es_secretario and not es_despachador:
+                    # Secretario puro: no puede cambiar estado ni confirmar pago
+                    messages.error(request, 'El secretario solo puede asignar despachadores. El cambio de estado y pago lo gestiona el despachador.')
+                elif confirmar_pago and es_despachador:
+                    if pedido.despachador != request.user:
+                        messages.error(request, 'No tienes permiso para confirmar el pago de este pedido.')
+                    else:
+                        pedido.pago_confirmado = True
+                        pedido.save()
+                        messages.success(request, f'Pago confirmado para el pedido {pedido.numero_tracking}.')
+                elif nuevo_estado in estados_validos and es_despachador:
+                    if nuevo_estado not in estados_despachador:
+                        messages.error(request, 'Solo puedes cambiar a "En Tránsito" o "Entregado".')
                     else:
                         estado_anterior = pedido.estado
                         pedido.estado = nuevo_estado
@@ -281,7 +403,7 @@ def lista_pedidos(request):
                             _enviar_notificacion_entrega(pedido)
                         messages.success(request, f'Estado de {pedido.numero_tracking} actualizado a "{pedido.get_estado_display()}".')
                 else:
-                    messages.error(request, 'Datos inválidos.')
+                    messages.error(request, 'Acción no permitida.')
             except Pedido.DoesNotExist:
                 messages.error(request, 'Pedido no encontrado.')
         return redirect('lista_pedidos')
@@ -321,10 +443,7 @@ def iniciar_sesion(request):
     Soporta login con email o nombre de usuario.
     """
     if request.user.is_authenticated:
-        if (request.user.groups.filter(name__in=['Secretario', 'Despachador']).exists()
-                or request.user.is_staff):
-            return redirect('lista_pedidos')
-        return redirect('panel_cliente')
+        return redirect('dashboard')
 
     if request.method == 'POST':
         username_input = request.POST.get('username', '').strip()
@@ -343,11 +462,7 @@ def iniciar_sesion(request):
             login(request, user)
             nombre_display = user.first_name or user.username
             messages.success(request, f'¡Bienvenido de nuevo, {nombre_display}!')
-            if (user.groups.filter(name__in=['Secretario', 'Despachador']).exists()
-                    or user.is_staff):
-                return redirect('lista_pedidos')
-            else:
-                return redirect('panel_cliente')
+            return redirect('dashboard')
         else:
             messages.error(
                 request,
@@ -374,126 +489,70 @@ def panel_cliente(request):
     return render(request, 'panel_cliente.html', {'pedidos': pedidos})
 
 
-# ─── Generación de PDF con QR ────────────────────────────────
+@login_required(login_url='iniciar_sesion')
+def descargar_orden_pdf(request, tracking):
+    """
+    Genera y descarga la orden de envío como archivo de texto.
+    No requiere librerías externas (sin reportlab, sin qrcode).
+    """
+    pedido = get_object_or_404(Pedido.objects.select_related('cliente'), numero_tracking=tracking)
 
-def _generar_pdf_pedido(pedido):
-    """Genera el PDF de la orden de pedido con QR. Devuelve bytes."""
-    # QR con el número de tracking
-    qr = qrcode.QRCode(version=1, box_size=6, border=2)
-    qr.add_data(
-        f"RutaExpres - Orden de Envío\n"
-        f"Tracking: {pedido.numero_tracking}\n"
-        f"Cliente: {pedido.cliente.nombre} {pedido.cliente.apellido}\n"
-        f"Destinatario: {pedido.destinatario}\n"
-        f"Origen: {pedido.origen}\n"
-        f"Destino: {pedido.destino}\n"
-        f"Peso: {pedido.peso_kg} kg\n"
-        f"Estado: {pedido.get_estado_display()}"
+    # Clientes solo pueden descargar sus propios pedidos
+    if not (request.user.groups.filter(name__in=['Secretario', 'Despachador']).exists()
+            or request.user.is_staff):
+        if hasattr(request.user, 'cliente') and pedido.cliente != request.user.cliente:
+            messages.error(request, 'No tienes permiso para descargar esta orden.')
+            return redirect('panel_cliente')
+
+    precio = f'${pedido.precio_envio}' if pedido.precio_envio else 'Por calcular'
+    metodo = pedido.get_metodo_pago_display() if pedido.metodo_pago else 'No especificado'
+    despachador_nombre = (
+        pedido.despachador.get_full_name() or pedido.despachador.username
+        if pedido.despachador else 'Sin asignar'
     )
-    qr.make(fit=True)
-    qr_img = qr.make_image(fill_color="#003580", back_color="white")
-    qr_buffer = io.BytesIO()
-    qr_img.save(qr_buffer, format='PNG')
-    qr_buffer.seek(0)
 
-    # Estilos
-    titulo = ParagraphStyle('titulo', fontSize=20, alignment=TA_CENTER,
-                             fontName='Helvetica-Bold', textColor=colors.HexColor('#003580'), spaceAfter=4)
-    subtitulo = ParagraphStyle('sub', fontSize=11, alignment=TA_CENTER,
-                                fontName='Helvetica', textColor=colors.HexColor('#555'), spaceAfter=6)
-    label = ParagraphStyle('label', fontSize=10, fontName='Helvetica-Bold',
-                            textColor=colors.HexColor('#003580'))
-    valor = ParagraphStyle('valor', fontSize=10, fontName='Helvetica',
-                            textColor=colors.black)
-    pie = ParagraphStyle('pie', fontSize=8, alignment=TA_CENTER,
-                          fontName='Helvetica-Oblique', textColor=colors.grey)
-
-    buffer = io.BytesIO()
-    doc = SimpleDocTemplate(buffer, pagesize=A4,
-                            rightMargin=2*cm, leftMargin=2*cm,
-                            topMargin=2*cm, bottomMargin=2*cm)
-
-    def draw_border(canvas, doc):
-        canvas.saveState()
-        canvas.setStrokeColor(colors.HexColor('#003580'))
-        canvas.setLineWidth(3)
-        canvas.rect(1*cm, 1*cm, A4[0]-2*cm, A4[1]-2*cm)
-        canvas.restoreState()
-
-    elementos = []
-    elementos.append(Spacer(1, 0.5*cm))
-    elementos.append(Paragraph("ORDEN DE ENVÍO", titulo))
-    elementos.append(Paragraph("RutaExpres — Centro de Soluciones Logísticas", subtitulo))
-    elementos.append(Spacer(1, 0.3*cm))
-
-    # Línea separadora
-    sep = Table([['']], colWidths=[A4[0]-4*cm])
-    sep.setStyle(TableStyle([
-        ('LINEBELOW', (0,0), (-1,-1), 1.5, colors.HexColor('#003580')),
-        ('TOPPADDING', (0,0), (-1,-1), 0),
-        ('BOTTOMPADDING', (0,0), (-1,-1), 8),
-    ]))
-    elementos.append(sep)
-
-    # Datos del pedido + QR lado a lado
-    datos = [
-        [Paragraph("N° Tracking:", label), Paragraph(f"<b>{pedido.numero_tracking}</b>", ParagraphStyle('t', fontSize=12, fontName='Helvetica-Bold', textColor=colors.HexColor('#003580')))],
-        [Paragraph("Estado:", label), Paragraph(pedido.get_estado_display(), valor)],
-        [Paragraph("Cliente:", label), Paragraph(f"{pedido.cliente.nombre} {pedido.cliente.apellido}", valor)],
-        [Paragraph("Email:", label), Paragraph(pedido.cliente.email, valor)],
-        [Paragraph("Teléfono:", label), Paragraph(pedido.cliente.telefono, valor)],
-        [Paragraph("Destinatario:", label), Paragraph(pedido.destinatario, valor)],
-        [Paragraph("Tipo de servicio:", label), Paragraph(pedido.get_tipo_servicio_display(), valor)],
-        [Paragraph("Origen:", label), Paragraph(pedido.origen, valor)],
-        [Paragraph("Destino:", label), Paragraph(pedido.destino, valor)],
-        [Paragraph("Peso:", label), Paragraph(f"{pedido.peso_kg} kg", valor)],
-        [Paragraph("Descripción:", label), Paragraph(pedido.descripcion_carga, valor)],
-        [Paragraph("Fecha:", label), Paragraph(pedido.fecha_creacion.strftime('%d/%m/%Y %H:%M'), valor)],
-    ]
-
-    tabla_datos = Table(datos, colWidths=[4*cm, 9*cm])
-    tabla_datos.setStyle(TableStyle([
-        ('VALIGN', (0,0), (-1,-1), 'TOP'),
-        ('TOPPADDING', (0,0), (-1,-1), 4),
-        ('BOTTOMPADDING', (0,0), (-1,-1), 4),
-        ('ROWBACKGROUNDS', (0,0), (-1,-1), [colors.HexColor('#f0f4ff'), colors.white]),
-    ]))
-
-    qr_image = Image(qr_buffer, width=4*cm, height=4*cm)
-
-    cuerpo = Table(
-        [[tabla_datos, qr_image]],
-        colWidths=[13*cm, 4.5*cm]
+    contenido = (
+        '╔══════════════════════════════════════════════╗\n'
+        '║      RUTAEXPRES - ORDEN DE ENVÍO             ║\n'
+        '║      Centro de Soluciones Logísticas         ║\n'
+        '╚══════════════════════════════════════════════╝\n\n'
+        f'Número de Tracking : {pedido.numero_tracking}\n'
+        f'Estado             : {pedido.get_estado_display()}\n'
+        f'Fecha de creación  : {pedido.fecha_creacion.strftime("%d/%m/%Y %H:%M")}\n\n'
+        '── CLIENTE ──────────────────────────────────────\n'
+        f'Nombre    : {pedido.cliente.nombre} {pedido.cliente.apellido}\n'
+        f'Email     : {pedido.cliente.email}\n'
+        f'Teléfono  : {pedido.cliente.telefono}\n'
+        f'Dirección : {pedido.cliente.direccion}\n\n'
+        '── ENVÍO ────────────────────────────────────────\n'
+        f'Destinatario    : {pedido.destinatario}\n'
+        f'Tipo de servicio: {pedido.get_tipo_servicio_display()}\n'
+        f'Origen          : {pedido.origen}\n'
+        f'Destino         : {pedido.destino}\n'
+        f'Peso            : {pedido.peso_kg} kg\n'
+        f'Precio estimado : {precio}\n'
+        f'Descripción     : {pedido.descripcion_carga}\n\n'
+        '── PAGO ─────────────────────────────────────────\n'
+        f'Método de pago  : {metodo}\n'
+        f'Pago confirmado : {"SÍ" if pedido.pago_confirmado else "NO"}\n\n'
+        '── ASIGNACIÓN ───────────────────────────────────\n'
+        f'Despachador     : {despachador_nombre}\n\n'
+        '────────────────────────────────────────────────\n'
+        'Tel: +593 2 345 6789 | info@rutaexpres.com.ec\n'
+        '────────────────────────────────────────────────\n'
     )
-    cuerpo.setStyle(TableStyle([
-        ('VALIGN', (0,0), (-1,-1), 'TOP'),
-        ('ALIGN', (1,0), (1,0), 'CENTER'),
-        ('LEFTPADDING', (0,0), (-1,-1), 0),
-        ('RIGHTPADDING', (0,0), (-1,-1), 0),
-    ]))
-    elementos.append(cuerpo)
-    elementos.append(Spacer(1, 0.5*cm))
 
-    # Pie
-    sep2 = Table([['']], colWidths=[A4[0]-4*cm])
-    sep2.setStyle(TableStyle([
-        ('LINEABOVE', (0,0), (-1,-1), 1, colors.HexColor('#003580')),
-        ('TOPPADDING', (0,0), (-1,-1), 6),
-    ]))
-    elementos.append(sep2)
-    elementos.append(Paragraph(
-        "Escanee el código QR para rastrear su envío en línea · Tel: +593 2 345 6789 · info@rutaexpres.com.ec",
-        pie
-    ))
-
-    doc.build(elementos, onFirstPage=draw_border, onLaterPages=draw_border)
-    buffer.seek(0)
-    return buffer.read()
+    response = HttpResponse(contenido, content_type='text/plain; charset=utf-8')
+    response['Content-Disposition'] = f'attachment; filename="Orden_{tracking}.txt"'
+    return response
 
 
 @login_required(login_url='iniciar_sesion')
 def asignar_despachador(request, tracking):
-    """Solo el secretario puede asignar un despachador a un pedido."""
+    """
+    Solo el Secretario puede asignar un despachador a un pedido.
+    El despachador asignado verá el pedido en su panel.
+    """
     es_secretario = request.user.groups.filter(name='Secretario').exists() or request.user.is_staff
     if not es_secretario:
         messages.error(request, 'Solo el Secretario puede asignar despachadores.')
@@ -508,53 +567,47 @@ def asignar_despachador(request, tracking):
                 despachador = User.objects.get(pk=despachador_id, groups__name='Despachador')
                 pedido.despachador = despachador
                 pedido.save()
-                messages.success(request, f'Pedido {tracking} asignado a {despachador.get_full_name() or despachador.username}.')
+                messages.success(
+                    request,
+                    f'Pedido {tracking} asignado a {despachador.get_full_name() or despachador.username}.'
+                )
             except User.DoesNotExist:
                 messages.error(request, 'Despachador no válido.')
         else:
             pedido.despachador = None
             pedido.save()
-            messages.success(request, f'Pedido {tracking} sin despachador asignado.')
+            messages.info(request, f'Pedido {tracking} quedó sin despachador asignado.')
+
     return redirect('lista_pedidos')
 
 
 @login_required(login_url='iniciar_sesion')
 def reporte_global(request):
-    """Reporte global solo para Secretario o staff — NO para Despachador."""
+    """
+    Reporte financiero y operacional.
+    Solo Secretario o staff — el Despachador NO puede ver datos financieros.
+    """
     es_secretario = request.user.groups.filter(name='Secretario').exists() or request.user.is_staff
     if not es_secretario:
         messages.error(request, 'Solo el Secretario puede acceder al reporte financiero.')
         return redirect('lista_pedidos')
 
-    pedidos = Pedido.objects.select_related('cliente').all()
-    total = pedidos.count()
-    pendientes = pedidos.filter(estado='pendiente').count()
+    pedidos     = Pedido.objects.select_related('cliente').all()
+    total       = pedidos.count()
+    pendientes  = pedidos.filter(estado='pendiente').count()
     en_transito = pedidos.filter(estado='en_transito').count()
-    entregados = pedidos.filter(estado='entregado').count()
-    cancelados = pedidos.filter(estado='cancelado').count()
-
-    # Ingresos totales (pedidos con precio calculado)
-    from django.db.models import Sum
-    ingresos = pedidos.exclude(precio_envio__isnull=True).aggregate(
+    entregados  = pedidos.filter(estado='entregado').count()
+    cancelados  = pedidos.filter(estado='cancelado').count()
+    ingresos    = pedidos.exclude(precio_envio__isnull=True).aggregate(
         total=Sum('precio_envio')
     )['total'] or 0
 
     return render(request, 'reporte.html', {
-        'total': total,
-        'pendientes': pendientes,
+        'total':       total,
+        'pendientes':  pendientes,
         'en_transito': en_transito,
-        'entregados': entregados,
-        'cancelados': cancelados,
-        'ingresos': ingresos,
-        'pedidos': pedidos,
+        'entregados':  entregados,
+        'cancelados':  cancelados,
+        'ingresos':    ingresos,
+        'pedidos':     pedidos,
     })
-
-
-@login_required(login_url='iniciar_sesion')
-def descargar_orden_pdf(request, tracking):
-    """Descarga el PDF de la orden de un pedido."""
-    pedido = get_object_or_404(Pedido.objects.select_related('cliente'), numero_tracking=tracking)
-    pdf_bytes = _generar_pdf_pedido(pedido)
-    response = HttpResponse(pdf_bytes, content_type='application/pdf')
-    response['Content-Disposition'] = f'inline; filename="Orden_de_Envio_{tracking}.pdf"'
-    return response

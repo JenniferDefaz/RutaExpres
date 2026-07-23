@@ -1,0 +1,156 @@
+{% extends './plantillaPrin.html' %}
+{% load static %}
+
+{% block contenido %}
+<div class="container-fluid px-4 py-5">
+
+    <!-- Bienvenida -->
+    <div class="welcome-banner wow fadeInDown" data-wow-delay="0.1s"
+         style="background:linear-gradient(135deg,#055160 0%,#0dcaf0 100%);border-radius:16px;color:#fff;padding:32px 36px;margin-bottom:30px;">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+            <div>
+                <h2 class="fw-bold mb-1"><i class="fa fa-truck me-2"></i>Panel de Despacho</h2>
+                <p class="mb-0" style="opacity:.85;">Hola, <strong>{{ request.user.get_full_name|default:request.user.username }}</strong> — Aquí están tus pedidos asignados.</p>
+            </div>
+            <a href="{% url 'lista_pedidos' %}" class="btn btn-light fw-semibold">
+                <i class="fa fa-list me-2"></i>Ver Todos Mis Despachos
+            </a>
+        </div>
+    </div>
+
+    <!-- Tarjetas de estado -->
+    <div class="row g-4 mb-5">
+        <div class="col-6 col-md-3 wow fadeInUp" data-wow-delay="0.1s">
+            <div class="card stat-card h-100">
+                <div class="card-body text-center py-4">
+                    <div class="icon-box mx-auto mb-3" style="background:rgba(13,202,240,.1);">
+                        <i class="fa fa-inbox text-info" style="font-size:26px;"></i>
+                    </div>
+                    <h2 class="fw-bold mb-0">{{ total }}</h2>
+                    <p class="text-muted small mb-0 mt-1">Total Asignados</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3 wow fadeInUp" data-wow-delay="0.15s">
+            <div class="card stat-card h-100">
+                <div class="card-body text-center py-4">
+                    <div class="icon-box mx-auto mb-3" style="background:rgba(255,193,7,.1);">
+                        <i class="fa fa-clock text-warning" style="font-size:26px;"></i>
+                    </div>
+                    <h2 class="fw-bold mb-0 text-warning">{{ pendientes }}</h2>
+                    <p class="text-muted small mb-0 mt-1">Pendientes</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3 wow fadeInUp" data-wow-delay="0.2s">
+            <div class="card stat-card h-100">
+                <div class="card-body text-center py-4">
+                    <div class="icon-box mx-auto mb-3" style="background:rgba(13,202,240,.1);">
+                        <i class="fa fa-shipping-fast text-info" style="font-size:26px;"></i>
+                    </div>
+                    <h2 class="fw-bold mb-0 text-info">{{ en_transito }}</h2>
+                    <p class="text-muted small mb-0 mt-1">En Tránsito</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3 wow fadeInUp" data-wow-delay="0.25s">
+            <div class="card stat-card h-100">
+                <div class="card-body text-center py-4">
+                    <div class="icon-box mx-auto mb-3" style="background:rgba(25,135,84,.1);">
+                        <i class="fa fa-check-circle text-success" style="font-size:26px;"></i>
+                    </div>
+                    <h2 class="fw-bold mb-0 text-success">{{ entregados }}</h2>
+                    <p class="text-muted small mb-0 mt-1">Entregados</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Gráfico + Pedidos recientes -->
+    <div class="row g-4">
+        <div class="col-lg-5 wow fadeInLeft" data-wow-delay="0.1s">
+            <div class="chart-container h-100">
+                <h5 class="fw-bold mb-4"><i class="fa fa-chart-pie text-info me-2"></i>Mis Pedidos por Estado</h5>
+                <canvas id="graficoDespachador" style="max-height:260px;"></canvas>
+            </div>
+        </div>
+        <div class="col-lg-7 wow fadeInRight" data-wow-delay="0.1s">
+            <div class="table-card card h-100">
+                <div class="card-header d-flex justify-content-between align-items-center py-3 px-4" style="background:#055160;">
+                    <h5 class="mb-0 text-white"><i class="fa fa-box me-2"></i>Pedidos Recientes</h5>
+                    <a href="{% url 'lista_pedidos' %}" class="btn btn-sm btn-outline-light">Gestionar</a>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th class="ps-4">Tracking</th>
+                                    <th>Cliente</th>
+                                    <th>Destino</th>
+                                    <th>Estado</th>
+                                    <th class="pe-4"></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for p in pedidos_recientes %}
+                                <tr>
+                                    <td class="ps-4 fw-semibold text-primary">{{ p.numero_tracking }}</td>
+                                    <td>{{ p.cliente.nombre }}</td>
+                                    <td>{{ p.destino }}</td>
+                                    <td>
+                                        <span class="badge-estado
+                                            {% if p.estado == 'pendiente' %}badge-pendiente
+                                            {% elif p.estado == 'en_transito' %}badge-transito
+                                            {% elif p.estado == 'entregado' %}badge-entregado
+                                            {% else %}badge-cancelado{% endif %}">
+                                            {{ p.get_estado_display }}
+                                        </span>
+                                    </td>
+                                    <td class="pe-4">
+                                        <a href="{% url 'detalle_pedido' p.numero_tracking %}" class="btn btn-sm btn-outline-primary">
+                                            <i class="fa fa-eye"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr><td colspan="5" class="text-center text-muted py-4">No tienes pedidos asignados aún.</td></tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.1/dist/chart.umd.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    new Chart(document.getElementById('graficoDespachador'), {
+        type: 'doughnut',
+        data: {
+            labels: {{ etiquetas_estado_json|safe }},
+            datasets: [{
+                data: {{ datos_estado_json|safe }},
+                backgroundColor: ['#F5A516', '#0dcaf0', '#CE1212', '#6c757d'],
+                borderColor: ['#d4890f', '#0aa4c4', '#a50e0e', '#5a6268'],
+                borderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { position: 'bottom' },
+                tooltip: { callbacks: { label: function(ctx) { return ctx.label + ': ' + ctx.parsed; } } }
+            },
+            cutout: '60%'
+        }
+    });
+});
+</script>
+{% endblock %}

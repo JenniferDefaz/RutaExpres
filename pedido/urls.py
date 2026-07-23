@@ -10,6 +10,9 @@ urlpatterns = [
     path('login/', views.iniciar_sesion, name='iniciar_sesion'),
     path('logout/', views.cerrar_sesion, name='cerrar_sesion'),
 
+    # Dashboard (redirige según rol)
+    path('dashboard/', views.dashboard, name='dashboard'),
+
     # Clientes
     path('clientes/registrar/', views.registrar_cliente, name='registrar_cliente'),
 
@@ -21,7 +24,7 @@ urlpatterns = [
     path('pedidos/<str:tracking>/asignar/', views.asignar_despachador, name='asignar_despachador'),
     path('pedidos/<str:tracking>/', views.detalle_pedido, name='detalle_pedido'),
 
-    # Panel cliente
+    # Panel cliente (mantener compatibilidad)
     path('panel/', views.panel_cliente, name='panel_cliente'),
 
     # Reporte

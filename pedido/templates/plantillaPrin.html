@@ -1,131 +1,252 @@
-{% load static %} <!-- Hace el llamado a todos los archivos de la carpeta static -->
-<!DOCTYPE html>
-<html lang="en">
-
+{% load static %}
+<!doctype html>
+<html class="no-js" lang="es">
 <head>
     <meta charset="utf-8">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
     <title>RutaExpres - Centro de Soluciones</title>
-    <meta content="width=device-width, initial-scale=1.0" name="viewport">
-    <meta content="logistica, envios, rastreo, servientrega, ecuador, colombia" name="keywords">
-    <meta content="RutaExpres - Centro de Soluciones. Envía y rastrea tus paquetes con seguridad." name="description">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="RutaExpres - Sistema de gestión de envíos y rastreo de pedidos.">
 
     <!-- Favicon -->
-    <link href="{% static 'img/favicon.ico' %}" rel="icon">
+    <link rel="shortcut icon" type="image/x-icon" href="{% static 'img/favicon.ico' %}">
 
-    <!-- Google Web Fonts -->
+    <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Roboto:wght@500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
 
-    <!-- Icon Font Stylesheet -->
+    <!-- Icon Fonts -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.10.0/css/all.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.4.1/font/bootstrap-icons.css" rel="stylesheet">
 
-    <!-- Libraries Stylesheet -->
+    <!-- Bootstrap -->
+    <link href="{% static 'css/bootstrap.min.css' %}" rel="stylesheet">
+
+    <!-- Animate + Owl Carousel -->
     <link href="{% static 'lib/animate/animate.min.css' %}" rel="stylesheet">
     <link href="{% static 'lib/owlcarousel/assets/owl.carousel.min.css' %}" rel="stylesheet">
 
-    <!-- Customized Bootstrap Stylesheet -->
-    <link href="{% static 'css/bootstrap.min.css' %}" rel="stylesheet">
-
-    <!-- Template Stylesheet -->
+    <!-- Estilos base del template -->
     <link href="{% static 'css/style.css' %}" rel="stylesheet">
 
-    <!-- DataTables CSS -->
+    <!-- DataTables -->
     <link rel="stylesheet" href="https://cdn.datatables.net/2.3.8/css/dataTables.dataTables.min.css">
     <link rel="stylesheet" href="https://cdn.datatables.net/buttons/3.2.6/css/buttons.dataTables.min.css">
 
-    <!-- Bootstrap FileInput CSS -->
+    <!-- Bootstrap FileInput -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-fileinput/5.5.4/css/fileinput.min.css">
+
+    <!-- SweetAlert2 -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+
+    <style>
+        :root {
+            --primary: #CE1212;
+            --secondary: #F5A516;
+            --dark: #1F1F1F;
+            --light: #F8F2F0;
+        }
+        body { font-family: 'Inter', sans-serif; }
+
+        /* ── Tracking Timeline ── */
+        .tracking-timeline { display: flex; align-items: center; justify-content: space-between; position: relative; padding: 20px 10px; }
+        .tracking-timeline::before { content: ''; position: absolute; top: 35px; left: 10%; right: 10%; height: 4px; background: #dee2e6; z-index: 0; }
+        .tracking-step { display: flex; flex-direction: column; align-items: center; position: relative; z-index: 1; flex: 1; }
+        .tracking-step .step-icon { width: 54px; height: 54px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 22px; border: 3px solid #dee2e6; background: #fff; color: #adb5bd; transition: all .3s; }
+        .tracking-step.active .step-icon { background: var(--primary); border-color: var(--primary); color: #fff; box-shadow: 0 0 0 6px rgba(0,156,59,.15); }
+        .tracking-step.done .step-icon { background: var(--primary); border-color: var(--primary); color: #fff; }
+        .tracking-step.cancelled .step-icon { background: #dc3545; border-color: #dc3545; color: #fff; }
+        .tracking-step .step-label { margin-top: 10px; font-size: 12px; font-weight: 600; text-align: center; color: #6c757d; text-transform: uppercase; }
+        .tracking-step.active .step-label { color: var(--primary); }
+        .tracking-step.done .step-label { color: var(--primary); }
+        .tracking-step.cancelled .step-label { color: #dc3545; }
+
+        /* Línea de progreso coloreada */
+        .tracking-progress-bar { position: absolute; top: 35px; left: 10%; height: 4px; background: var(--primary); z-index: 0; transition: width .5s; }
+
+        /* ── Cards Dashboard ── */
+        .stat-card { border: none; border-radius: 12px; box-shadow: 0 4px 24px rgba(0,0,0,.07); transition: transform .2s, box-shadow .2s; }
+        .stat-card:hover { transform: translateY(-4px); box-shadow: 0 8px 32px rgba(0,0,0,.12); }
+        .stat-card .icon-box { width: 60px; height: 60px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 26px; }
+
+        /* ── Imágenes con borde centradas ── */
+        .img-bordered { border: 3px solid var(--primary); border-radius: 10px; box-shadow: 0 4px 16px rgba(0,0,0,.1); display: block; margin: 0 auto; }
+        .service-item img { border: 2px solid #e9ecef; border-radius: 8px; transition: .4s; width: 100%; object-fit: cover; height: 200px; }
+        .service-item:hover img { border-color: var(--primary); transform: scale(1.04); }
+
+        /* ── Panel sidebar (roles internos) ── */
+        .panel-sidebar { background: #fff; border-right: 1px solid #e9ecef; min-height: calc(100vh - 75px); padding: 24px 0; }
+        .panel-sidebar .nav-link { color: #495057; padding: 10px 24px; border-radius: 0; font-weight: 500; display: flex; align-items: center; gap: 10px; }
+        .panel-sidebar .nav-link:hover, .panel-sidebar .nav-link.active { background: rgba(0,156,59,.08); color: var(--primary); border-left: 3px solid var(--primary); }
+        .panel-sidebar .nav-link i { width: 20px; text-align: center; }
+        .panel-sidebar .sidebar-section { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: #adb5bd; padding: 16px 24px 6px; font-weight: 700; }
+
+        /* Estado badges mejorados */
+        .badge-estado { padding: 6px 14px; font-size: 12px; font-weight: 600; border-radius: 20px; display: inline-flex; align-items: center; gap: 4px; }
+        .badge-pendiente { background: #fff3cd; color: #856404; border: 1px solid #ffc107; }
+        .badge-transito { background: #cff4fc; color: #055160; border: 1px solid #0dcaf0; }
+        .badge-entregado { background: #d1e7dd; color: #0f5132; border: 1px solid #198754; }
+        .badge-cancelado { background: #f8d7da; color: #842029; border: 1px solid #dc3545; }
+
+        /* Chart containers */
+        .chart-container { position: relative; background: #fff; border-radius: 12px; padding: 24px; box-shadow: 0 4px 24px rgba(0,0,0,.07); }
+
+        /* Responsive table */
+        .table-card { border: none; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 24px rgba(0,0,0,.07); }
+        .table-card .table thead { background: var(--dark); color: #fff; }
+    </style>
 
     {% block extra_css %}{% endblock %}
 </head>
 
 <body>
-    <!-- Spinner Start -->
-    <div id="spinner" class="show bg-white position-fixed translate-middle w-100 vh-100 top-50 start-50 d-flex align-items-center justify-content-center">
-        <div class="spinner-grow text-primary" style="width: 3rem; height: 3rem;" role="status">
-            <span class="sr-only">Loading...</span>
+    <!-- Spinner -->
+    <div id="spinner" class="show bg-white position-fixed translate-middle w-100 vh-100 top-50 start-50 d-flex align-items-center justify-content-center" style="z-index:99999;">
+        <div class="spinner-grow text-primary" style="width:3rem;height:3rem;" role="status">
+            <span class="visually-hidden">Cargando...</span>
         </div>
     </div>
-    <!-- Spinner End -->
 
-
-    <!-- Navbar Start -->
+    <!-- ══ NAVBAR ══ -->
     <nav class="navbar navbar-expand-lg bg-white navbar-light shadow border-top border-5 border-primary sticky-top p-0">
-        <a href="/inicio/" class="navbar-brand bg-primary d-flex align-items-center px-4 px-lg-5">
-            <h2 class="mb-2 text-white">RutaExpres</h2>
+        <a href="{% url 'inicio' %}" class="navbar-brand bg-primary d-flex align-items-center px-4 px-lg-5">
+            <h2 class="mb-2 text-white"><i class="fa fa-shipping-fast me-2"></i>RutaExpres</h2>
         </a>
         <button type="button" class="navbar-toggler me-4" data-bs-toggle="collapse" data-bs-target="#navbarCollapse">
             <span class="navbar-toggler-icon"></span>
         </button>
         <div class="collapse navbar-collapse" id="navbarCollapse">
             <div class="navbar-nav ms-auto p-4 p-lg-0">
-                <a href="{% url 'inicio' %}" class="nav-item nav-link">Inicio</a>
+                <a href="{% url 'inicio' %}" class="nav-item nav-link {% if request.resolver_match.url_name == 'inicio' %}active{% endif %}">
+                    <i class="fa fa-home me-1"></i>Inicio
+                </a>
                 {% if user.is_authenticated %}
                     {% if es_secretario %}
-                        <a href="{% url 'lista_pedidos' %}" class="nav-item nav-link">Panel Admin</a>
-                        <a href="{% url 'reporte_global' %}" class="nav-item nav-link">
+                        <a href="{% url 'dashboard' %}" class="nav-item nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+                            <i class="fa fa-tachometer-alt me-1"></i>Dashboard
+                        </a>
+                        <a href="{% url 'lista_pedidos' %}" class="nav-item nav-link {% if request.resolver_match.url_name == 'lista_pedidos' %}active{% endif %}">
+                            <i class="fa fa-list me-1"></i>Pedidos
+                        </a>
+                        <a href="{% url 'reporte_global' %}" class="nav-item nav-link {% if request.resolver_match.url_name == 'reporte_global' %}active{% endif %}">
                             <i class="fa fa-chart-bar me-1"></i>Reporte
                         </a>
-                        <a href="{% url 'registrar_cliente' %}" class="nav-item nav-link">Registrar Cliente</a>
+                        <a href="{% url 'registrar_cliente' %}" class="nav-item nav-link">
+                            <i class="fa fa-user-plus me-1"></i>Nuevo Cliente
+                        </a>
                     {% elif es_despachador %}
-                        <a href="{% url 'lista_pedidos' %}" class="nav-item nav-link">Panel Despacho</a>
+                        <a href="{% url 'dashboard' %}" class="nav-item nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+                            <i class="fa fa-tachometer-alt me-1"></i>Mi Panel
+                        </a>
+                        <a href="{% url 'lista_pedidos' %}" class="nav-item nav-link {% if request.resolver_match.url_name == 'lista_pedidos' %}active{% endif %}">
+                            <i class="fa fa-box me-1"></i>Mis Despachos
+                        </a>
                     {% else %}
-                        <a href="{% url 'panel_cliente' %}" class="nav-item nav-link">Mi Panel</a>
+                        <a href="{% url 'dashboard' %}" class="nav-item nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+                            <i class="fa fa-user-circle me-1"></i>Mi Panel
+                        </a>
+                        <a href="{% url 'registrar_pedido' %}" class="nav-item nav-link">
+                            <i class="fa fa-plus-circle me-1"></i>Nuevo Envío
+                        </a>
                     {% endif %}
-                    <a href="{% url 'registrar_pedido' %}" class="nav-item nav-link">Nuevo Pedido</a>
-                    <a href="{% url 'cerrar_sesion' %}" class="nav-item nav-link">Cerrar Sesión</a>
+                    <a href="{% url 'rastrear_pedido' %}" class="nav-item nav-link">
+                        <i class="fa fa-search me-1"></i>Rastrear
+                    </a>
+                    <div class="nav-item dropdown">
+                        <a href="#" class="nav-link dropdown-toggle d-flex align-items-center gap-2" data-bs-toggle="dropdown">
+                            <span class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center" style="width:32px;height:32px;font-size:14px;">
+                                {{ user.first_name|first|upper|default:user.username|first|upper }}
+                            </span>
+                            <span>{{ user.first_name|default:user.username }}</span>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end shadow border-0">
+                            <li><span class="dropdown-item-text text-muted small">
+                                {% if es_secretario %}<span class="badge bg-success">Secretario</span>
+                                {% elif es_despachador %}<span class="badge bg-info text-dark">Despachador</span>
+                                {% else %}<span class="badge bg-secondary">Cliente</span>{% endif %}
+                                {{ user.get_full_name|default:user.username }}
+                            </span></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item text-danger" href="{% url 'cerrar_sesion' %}">
+                                <i class="fa fa-sign-out-alt me-2"></i>Cerrar Sesión
+                            </a></li>
+                        </ul>
+                    </div>
                 {% else %}
-                    <a href="{% url 'registrar_cliente' %}" class="nav-item nav-link">Registrarse</a>
-                    <a href="{% url 'rastrear_pedido' %}" class="nav-item nav-link">Rastrear Pedido</a>
-                    <a href="{% url 'iniciar_sesion' %}" class="nav-item nav-link">Iniciar Sesión</a>
+                    <a href="{% url 'rastrear_pedido' %}" class="nav-item nav-link">
+                        <i class="fa fa-search me-1"></i>Rastrear Envío
+                    </a>
+                    <a href="{% url 'registrar_cliente' %}" class="nav-item nav-link">
+                        <i class="fa fa-user-plus me-1"></i>Registrarse
+                    </a>
+                    <a href="{% url 'iniciar_sesion' %}" class="btn btn-primary py-4 px-lg-5 d-none d-lg-block">
+                        Iniciar Sesión <i class="fa fa-arrow-right ms-3"></i>
+                    </a>
                 {% endif %}
             </div>
-            <h4 class="m-0 pe-lg-5 d-none d-lg-block"><i class="fa fa-headphones text-primary me-3"></i>+593 2 345 6789</h4>
         </div>
     </nav>
-    {% block contenido %}
-    {% endblock %}
+    <!-- ══ FIN NAVBAR ══ -->
 
-    <div class="container-fluid bg-dark text-light footer pt-5 wow fadeIn" data-wow-delay="0.1s" style="margin-top: 6rem;">
+    <!-- CONTENIDO -->
+    {% block contenido %}{% endblock %}
+
+    <!-- ══ FOOTER ══ -->
+    <div class="container-fluid bg-dark text-light footer pt-5 wow fadeIn" data-wow-delay="0.1s" style="margin-top:6rem;">
         <div class="container py-5">
             <div class="row g-5">
-                <div class="col-lg-3 col-md-6">
-                    <h4 class="text-light mb-4">Contacto</h4>
-                    <p class="mb-2"><i class="fa fa-map-marker-alt me-3"></i>Av. Principal 123, Quito, Ecuador</p>
-                    <p class="mb-2"><i class="fa fa-phone-alt me-3"></i>+593 2 345 6789</p>
-                    <p class="mb-2"><i class="fa fa-envelope me-3"></i>info@rutaexpres.com.ec</p>
+                <div class="col-lg-4 col-md-6">
+                    <h4 class="text-light mb-4"><i class="fa fa-shipping-fast me-2 text-primary"></i>RutaExpres</h4>
+                    <p class="mb-3">Sistema de gestión de envíos y logística. Conectamos tu mundo con velocidad y seguridad.</p>
+                    <p class="mb-2"><i class="fa fa-map-marker-alt me-3 text-primary"></i>Av. Principal 123, Quito, Ecuador</p>
+                    <p class="mb-2"><i class="fa fa-phone-alt me-3 text-primary"></i>+593 2 345 6789</p>
+                    <p class="mb-2"><i class="fa fa-envelope me-3 text-primary"></i>info@rutaexpres.com.ec</p>
                     <div class="d-flex pt-2">
-                        <a class="btn btn-outline-light btn-social" href=""><i class="fab fa-twitter"></i></a>
                         <a class="btn btn-outline-light btn-social" href=""><i class="fab fa-facebook-f"></i></a>
-                        <a class="btn btn-outline-light btn-social" href=""><i class="fab fa-youtube"></i></a>
-                        <a class="btn btn-outline-light btn-social" href=""><i class="fab fa-instagram"></i></a>
+                        <a class="btn btn-outline-light btn-social ms-2" href=""><i class="fab fa-instagram"></i></a>
+                        <a class="btn btn-outline-light btn-social ms-2" href=""><i class="fab fa-twitter"></i></a>
+                        <a class="btn btn-outline-light btn-social ms-2" href=""><i class="fab fa-youtube"></i></a>
                     </div>
                 </div>
-                <div class="col-lg-3 col-md-6">
-                    <h4 class="text-light mb-4">Nuestros Servicios</h4>
-                    <a class="btn btn-link" href="">Documentos y Paquetes</a>
-                    <a class="btn btn-link" href="">Carga Masiva</a>
-                    <a class="btn btn-link" href="">Logística Internacional</a>
-                    <a class="btn btn-link" href="">Soluciones E-commerce</a>
-                    <a class="btn btn-link" href="">Almacenamiento</a>
+                <div class="col-lg-2 col-md-6">
+                    <h4 class="text-light mb-4">Servicios</h4>
+                    <a class="btn btn-link" href="#">Transporte Aéreo</a>
+                    <a class="btn btn-link" href="#">Transporte Marítimo</a>
+                    <a class="btn btn-link" href="#">Transporte Terrestre</a>
+                    <a class="btn btn-link" href="#">Carga Especial</a>
+                    <a class="btn btn-link" href="#">Logística Internacional</a>
                 </div>
-                <div class="col-lg-3 col-md-6">
-                    <h4 class="text-light mb-4">Enlaces Rápidos</h4>
-                    <a class="btn btn-link" href="">Rastrear Envío</a>
-                    <a class="btn btn-link" href="">Cotizar Envío</a>
-                    <a class="btn btn-link" href="">Puntos de Atención</a>
-                    <a class="btn btn-link" href="">Términos y Condiciones</a>
-                    <a class="btn btn-link" href="">Preguntas Frecuentes</a>
+                <div class="col-lg-2 col-md-6">
+                    <h4 class="text-light mb-4">Acceso Rápido</h4>
+                    <a class="btn btn-link" href="{% url 'rastrear_pedido' %}">Rastrear Envío</a>
+                    <a class="btn btn-link" href="{% url 'registrar_pedido' %}">Registrar Pedido</a>
+                    {% if not user.is_authenticated %}
+                    <a class="btn btn-link" href="{% url 'registrar_cliente' %}">Registrarse</a>
+                    <a class="btn btn-link" href="{% url 'iniciar_sesion' %}">Iniciar Sesión</a>
+                    {% else %}
+                    <a class="btn btn-link" href="{% url 'dashboard' %}">Mi Panel</a>
+                    <a class="btn btn-link" href="{% url 'cerrar_sesion' %}">Cerrar Sesión</a>
+                    {% endif %}
                 </div>
-                <div class="col-lg-3 col-md-6">
+                <div class="col-lg-4 col-md-6">
                     <h4 class="text-light mb-4">Boletín Informativo</h4>
-                    <p>Suscríbete para recibir noticias y ofertas especiales sobre nuestros servicios logísticos.</p>
-                    <div class="position-relative mx-auto" style="max-width: 400px;">
-                        <input class="form-control border-0 w-100 py-3 ps-4 pe-5" type="text" placeholder="Tu correo electrónico">
-                        <button type="button" class="btn btn-primary py-2 position-absolute top-0 end-0 mt-2 me-2">Suscribirse</button>
+                    <p>Suscríbete para recibir noticias sobre nuestros servicios logísticos.</p>
+                    <div class="position-relative">
+                        <input class="form-control border-0 py-3 ps-4 pe-5" type="email" placeholder="Tu correo electrónico">
+                        <button type="button" class="btn btn-primary py-2 position-absolute top-0 end-0 mt-2 me-2">
+                            <i class="fa fa-paper-plane"></i>
+                        </button>
                     </div>
+                    {% if user.is_authenticated %}
+                    <div class="mt-3 p-3 rounded" style="background:rgba(255,255,255,.05);">
+                        <small class="text-white-50">Sesión activa:</small><br>
+                        <span class="text-white fw-semibold">{{ user.get_full_name|default:user.username }}</span>
+                        {% if es_secretario %}<span class="badge bg-success ms-2">Secretario</span>
+                        {% elif es_despachador %}<span class="badge bg-info text-dark ms-2">Despachador</span>
+                        {% else %}<span class="badge bg-secondary ms-2">Cliente</span>{% endif %}
+                    </div>
+                    {% endif %}
                 </div>
             </div>
         </div>
@@ -133,43 +254,34 @@
             <div class="copyright">
                 <div class="row">
                     <div class="col-md-6 text-center text-md-start mb-3 mb-md-0">
-                        &copy; <a class="border-bottom" href="#">RutaExpres Centro de Soluciones</a>, Todos los derechos reservados.
+                        &copy; {% now "Y" %} <a class="border-bottom" href="#">RutaExpres Centro de Soluciones</a>. Todos los derechos reservados.
                     </div>
                     <div class="col-md-6 text-center text-md-end">
-                        Diseñado para ofrecer el mejor servicio.
+                        Diseñado para ofrecer el mejor servicio logístico.
                     </div>
                 </div>
             </div>
         </div>
     </div>
-    <!-- Footer End -->
-
+    <!-- ══ FIN FOOTER ══ -->
 
     <!-- Back to Top -->
     <a href="#" class="btn btn-lg btn-primary btn-lg-square rounded-0 back-to-top"><i class="bi bi-arrow-up"></i></a>
 
-
-    <!-- JavaScript Libraries -->
-    <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0/dist/js/bootstrap.bundle.min.js"></script>
-
-    <!-- Bootstrap FileInput JS — carga antes del main.js para que $ esté disponible -->
+    <!-- ══ SCRIPTS BASE ══ -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-fileinput/5.5.4/js/fileinput.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-fileinput/5.5.4/js/locales/es.min.js"></script>
-
     <script src="{% static 'lib/wow/wow.min.js' %}"></script>
     <script src="{% static 'lib/easing/easing.min.js' %}"></script>
     <script src="{% static 'lib/waypoints/waypoints.min.js' %}"></script>
     <script src="{% static 'lib/counterup/counterup.min.js' %}"></script>
     <script src="{% static 'lib/owlcarousel/owl.carousel.min.js' %}"></script>
-
-    <!-- Template Javascript -->
     <script src="{% static 'js/main.js' %}"></script>
-
-    <!-- SweetAlert2 -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-    <!-- DataTables JS -->
+    <!-- DataTables -->
     <script src="https://cdn.datatables.net/2.3.8/js/dataTables.min.js"></script>
     <script src="https://cdn.datatables.net/buttons/3.2.6/js/dataTables.buttons.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
@@ -177,30 +289,31 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js"></script>
     <script src="https://cdn.datatables.net/buttons/3.2.6/js/buttons.html5.min.js"></script>
 
-    <!-- Traducción DataTables español -->
     <script>
+        // Ocultar spinner al cargar
+        window.addEventListener('load', function() {
+            const sp = document.getElementById('spinner');
+            if (sp) { sp.classList.remove('show'); }
+        });
+
+        // DataTables español
         const dtEspanol = {
             emptyTable:   'No hay datos disponibles.',
             zeroRecords:  'No se encontraron resultados.',
-            info:         'Mostrando _START_ a _END_ de _TOTAL_ entradas',
-            infoEmpty:    'Mostrando 0 a 0 de 0 entradas',
-            infoFiltered: '(filtrado de _MAX_ entradas totales)',
+            info:         'Mostrando _START_ a _END_ de _TOTAL_ registros',
+            infoEmpty:    'Mostrando 0 a 0 de 0 registros',
+            infoFiltered: '(filtrado de _MAX_ registros totales)',
             search:       'Buscar:',
-            lengthMenu:   'Mostrar _MENU_ entradas',
-            paginate: {
-                first: 'Primero', last: 'Último',
-                next: 'Siguiente', previous: 'Anterior'
-            }
+            lengthMenu:   'Mostrar _MENU_ registros',
+            paginate: { first:'Primero', last:'Último', next:'Siguiente', previous:'Anterior' }
         };
-    </script>
 
-    <!-- Confirmación de eliminación con SweetAlert2 -->
-    <script>
+        // Confirmación de eliminación con SweetAlert2
         function confirmarEliminacion(btn) {
             var url = btn.getAttribute('data-url');
             Swal.fire({
                 title: '¿Está seguro?',
-                text: '¡Esta acción no se puede revertir!',
+                text: 'Esta acción no se puede revertir.',
                 icon: 'warning',
                 showCancelButton: true,
                 confirmButtonColor: '#d33',
@@ -208,27 +321,22 @@
                 confirmButtonText: 'Sí, eliminar',
                 cancelButtonText: 'Cancelar'
             }).then(function(result) {
-                if (result.isConfirmed) {
-                    window.location.href = url;
-                }
+                if (result.isConfirmed) window.location.href = url;
             });
         }
     </script>
 
-    <!-- Importando la libreria de SweetAlert2 para mostrar alertas bonitas -->
-    <!-- (ya cargado arriba) -->
-
-    <!-- Mostrar mensajes de Django como alertas SweetAlert2 -->
+    <!-- Mensajes Django → SweetAlert2 -->
     {% if messages %}
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             {% for message in messages %}
             Swal.fire({
                 icon: '{% if message.tags == "success" %}success{% elif message.tags == "error" %}error{% elif message.tags == "warning" %}warning{% else %}info{% endif %}',
-                title: '{% if message.tags == "success" %}¡Éxito!{% elif message.tags == "error" %}¡Error!{% elif message.tags == "warning" %}Advertencia{% else %}Información{% endif %}',
+                title: '{% if message.tags == "success" %}¡Listo!{% elif message.tags == "error" %}¡Error!{% elif message.tags == "warning" %}Advertencia{% else %}Información{% endif %}',
                 text: '{{ message|escapejs }}',
                 confirmButtonText: 'Aceptar',
-                confirmButtonColor: '#009C3B',
+                confirmButtonColor: '#CE1212',
                 timer: {% if message.tags == "success" %}4000{% else %}0{% endif %},
                 timerProgressBar: {% if message.tags == "success" %}true{% else %}false{% endif %},
             });
@@ -239,5 +347,4 @@
 
     {% block extra_js %}{% endblock %}
 </body>
-
 </html>

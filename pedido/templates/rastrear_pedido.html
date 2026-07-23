@@ -4,97 +4,248 @@
 {% block contenido %}
 <div class="container py-5">
     <div class="row justify-content-center">
-        <div class="col-lg-7 col-md-9">
+        <div class="col-lg-8 col-md-10">
 
             <!-- Encabezado -->
-            <div class="text-center mb-4 wow fadeInUp" data-wow-delay="0.1s">
-                <h6 class="text-secondary text-uppercase">Seguimiento</h6>
-                <h1>Rastrear Pedido</h1>
+            <div class="text-center mb-5 wow fadeInDown" data-wow-delay="0.1s">
+                <div class="d-inline-flex align-items-center justify-content-center rounded-circle mb-3"
+                     style="width:72px;height:72px;background:rgba(0,156,59,.1);">
+                    <i class="fa fa-search-location fa-2x text-primary"></i>
+                </div>
+                <h6 class="text-secondary text-uppercase">Seguimiento en tiempo real</h6>
+                <h1 class="fw-bold">Rastrear Pedido</h1>
+                <p class="text-muted">Ingresa el número de tracking para ver el estado de tu envío.</p>
             </div>
 
             <!-- Formulario de búsqueda -->
-            <div class="card shadow-sm border-0 mb-4 wow fadeInUp" data-wow-delay="0.2s">
-                <div class="card-body p-4">
-                    <form method="post" novalidate>
+            <div class="card shadow-sm border-0 mb-5 wow fadeInUp" data-wow-delay="0.15s" style="border-radius:16px;">
+                <div class="card-body p-4 p-md-5">
+                    <form method="post" novalidate id="formRastreo">
                         {% csrf_token %}
                         <div class="mb-3">
                             <label for="{{ form.numero_tracking.id_for_label }}" class="form-label fw-semibold">
-                                Número de tracking
+                                Número de tracking <span class="text-danger">*</span>
                             </label>
-                            {{ form.numero_tracking }}
+                            <div class="input-group input-group-lg">
+                                <span class="input-group-text bg-primary text-white border-primary">
+                                    <i class="fa fa-hashtag"></i>
+                                </span>
+                                {{ form.numero_tracking }}
+                                <button type="submit" class="btn btn-primary px-4">
+                                    <i class="fa fa-search me-2"></i>Buscar
+                                </button>
+                            </div>
                             {% if form.numero_tracking.errors %}
-                                <div class="invalid-feedback d-block">
+                                <div class="text-danger small mt-2">
                                     {% for error in form.numero_tracking.errors %}{{ error }}{% endfor %}
                                 </div>
                             {% endif %}
-                        </div>
-                        <div class="d-grid">
-                            <button type="submit" class="btn btn-primary">
-                                <i class="fa fa-search me-2"></i>Buscar Pedido
-                            </button>
+                            <div class="form-text text-muted mt-2">
+                                <i class="fa fa-info-circle me-1"></i>
+                                Formato: <strong>RE-XXXXXXXX</strong> (mayúsculas y números). Ej: RE-A1B2C3D4
+                            </div>
                         </div>
                     </form>
                 </div>
             </div>
 
-            <!-- Resultado -->
+            <!-- Resultado del rastreo -->
             {% if pedido %}
-            <div class="card shadow border-0 wow fadeInUp" data-wow-delay="0.1s">
-                <div class="card-header bg-primary text-white py-3">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <h5 class="mb-0">
-                            <i class="fa fa-box me-2"></i>{{ pedido.numero_tracking }}
-                        </h5>
-                        <span class="badge
-                            {% if pedido.estado == 'pendiente' %}bg-warning text-dark
-                            {% elif pedido.estado == 'en_transito' %}bg-info text-dark
-                            {% elif pedido.estado == 'entregado' %}bg-success
-                            {% else %}bg-danger{% endif %} fs-6">
-                            {{ pedido.get_estado_display }}
-                        </span>
+            <div class="wow fadeInUp" data-wow-delay="0.1s">
+
+                <!-- Header del resultado -->
+                <div class="card border-0 shadow-sm mb-4" style="border-radius:16px;overflow:hidden;">
+                    <div style="background:linear-gradient(135deg,var(--dark),var(--primary));padding:24px 28px;">
+                        <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+                            <div>
+                                <small class="text-white-50 d-block mb-1">Número de seguimiento</small>
+                                <h3 class="text-white fw-bold mb-0"><i class="fa fa-hashtag me-2"></i>{{ pedido.numero_tracking }}</h3>
+                            </div>
+                            <span class="badge-estado fs-6
+                                {% if pedido.estado == 'pendiente' %}badge-pendiente
+                                {% elif pedido.estado == 'en_transito' %}badge-transito
+                                {% elif pedido.estado == 'entregado' %}badge-entregado
+                                {% else %}badge-cancelado{% endif %}">
+                                <i class="fa {% if pedido.estado == 'pendiente' %}fa-clock{% elif pedido.estado == 'en_transito' %}fa-truck{% elif pedido.estado == 'entregado' %}fa-check-circle{% else %}fa-times-circle{% endif %} me-1"></i>
+                                {{ pedido.get_estado_display }}
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Timeline de tracking -->
+                    <div class="card-body p-4">
+                        <div class="position-relative" style="padding:10px 0;">
+                            <!-- Barra fondo -->
+                            <div style="position:absolute;top:27px;left:12%;right:12%;height:5px;background:#dee2e6;border-radius:5px;z-index:0;"></div>
+                            <!-- Barra progreso -->
+                            <div style="position:absolute;top:27px;left:12%;height:5px;
+                                background:{% if pedido.estado == 'cancelado' %}#dc3545{% else %}var(--primary){% endif %};
+                                border-radius:5px;z-index:1;
+                                width:{% if pedido.estado == 'pendiente' %}0%{% elif pedido.estado == 'en_transito' %}50%{% elif pedido.estado == 'entregado' %}76%{% else %}0%{% endif %};"></div>
+
+                            <div class="d-flex justify-content-around" style="position:relative;z-index:2;">
+                                <!-- Registrado -->
+                                <div class="text-center" style="flex:1;">
+                                    <div class="mx-auto d-flex align-items-center justify-content-center rounded-circle"
+                                         style="width:54px;height:54px;font-size:18px;
+                                         background:{% if pedido.estado != 'cancelado' %}var(--primary){% else %}#6c757d{% endif %};
+                                         color:#fff;border:3px solid {% if pedido.estado != 'cancelado' %}var(--primary){% else %}#6c757d{% endif %};">
+                                        <i class="fa fa-clipboard-check"></i>
+                                    </div>
+                                    <small class="d-block mt-2 fw-bold" style="font-size:10px;color:var(--primary);">REGISTRADO</small>
+                                    <small class="text-muted" style="font-size:9px;">{{ pedido.fecha_creacion|date:"d/m/Y" }}</small>
+                                </div>
+                                <!-- Preparando -->
+                                <div class="text-center" style="flex:1;">
+                                    <div class="mx-auto d-flex align-items-center justify-content-center rounded-circle"
+                                         style="width:54px;height:54px;font-size:18px;
+                                         {% if pedido.estado != 'cancelado' %}background:var(--primary);color:#fff;border:3px solid var(--primary);{% else %}background:#fff;color:#adb5bd;border:3px solid #dee2e6;{% endif %}">
+                                        <i class="fa fa-box"></i>
+                                    </div>
+                                    <small class="d-block mt-2 fw-bold" style="font-size:10px;{% if pedido.estado != 'cancelado' %}color:var(--primary);{% else %}color:#6c757d;{% endif %}">PREPARANDO</small>
+                                </div>
+                                <!-- En Tránsito / Cancelado -->
+                                <div class="text-center" style="flex:1;">
+                                    <div class="mx-auto d-flex align-items-center justify-content-center rounded-circle"
+                                         style="width:54px;height:54px;font-size:18px;
+                                         {% if pedido.estado == 'en_transito' or pedido.estado == 'entregado' %}background:var(--primary);color:#fff;border:3px solid var(--primary);
+                                         {% elif pedido.estado == 'cancelado' %}background:#dc3545;color:#fff;border:3px solid #dc3545;
+                                         {% else %}background:#fff;color:#adb5bd;border:3px solid #dee2e6;{% endif %}">
+                                        <i class="fa {% if pedido.estado == 'cancelado' %}fa-times{% else %}fa-truck{% endif %}"></i>
+                                    </div>
+                                    <small class="d-block mt-2 fw-bold" style="font-size:10px;
+                                        {% if pedido.estado == 'en_transito' or pedido.estado == 'entregado' %}color:var(--primary);
+                                        {% elif pedido.estado == 'cancelado' %}color:#dc3545;
+                                        {% else %}color:#6c757d;{% endif %}">
+                                        {% if pedido.estado == 'cancelado' %}CANCELADO{% else %}EN TRÁNSITO{% endif %}
+                                    </small>
+                                </div>
+                                <!-- Entregado -->
+                                <div class="text-center" style="flex:1;">
+                                    <div class="mx-auto d-flex align-items-center justify-content-center rounded-circle"
+                                         style="width:54px;height:54px;font-size:18px;
+                                         {% if pedido.estado == 'entregado' %}background:var(--primary);color:#fff;border:3px solid var(--primary);box-shadow:0 0 0 6px rgba(0,156,59,.15);
+                                         {% else %}background:#fff;color:#adb5bd;border:3px solid #dee2e6;{% endif %}">
+                                        <i class="fa fa-check-circle"></i>
+                                    </div>
+                                    <small class="d-block mt-2 fw-bold" style="font-size:10px;{% if pedido.estado == 'entregado' %}color:var(--primary);{% else %}color:#6c757d;{% endif %}">ENTREGADO</small>
+                                    {% if pedido.estado == 'entregado' %}
+                                    <small class="text-muted" style="font-size:9px;">{{ pedido.fecha_actualizacion|date:"d/m/Y" }}</small>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
-                <div class="card-body p-4">
-                    <div class="row g-3">
-                        <div class="col-md-6">
-                            <p class="text-muted mb-1 small">Cliente</p>
-                            <p class="fw-semibold mb-0">{{ pedido.cliente.nombre }} {{ pedido.cliente.apellido }}</p>
+
+                <!-- Detalles del envío -->
+                <div class="card border-0 shadow-sm" style="border-radius:16px;">
+                    <div class="card-body p-4">
+                        <div class="row g-4">
+                            <div class="col-md-6">
+                                <div class="d-flex align-items-start gap-3">
+                                    <div style="width:40px;height:40px;border-radius:10px;background:rgba(0,156,59,.1);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                                        <i class="fa fa-user text-primary"></i>
+                                    </div>
+                                    <div>
+                                        <p class="text-muted small mb-1">Remitente</p>
+                                        <p class="fw-semibold mb-0">{{ pedido.cliente.nombre }} {{ pedido.cliente.apellido }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="d-flex align-items-start gap-3">
+                                    <div style="width:40px;height:40px;border-radius:10px;background:rgba(0,156,59,.1);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                                        <i class="fa fa-user-tag text-primary"></i>
+                                    </div>
+                                    <div>
+                                        <p class="text-muted small mb-1">Destinatario</p>
+                                        <p class="fw-semibold mb-0">{{ pedido.destinatario }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="d-flex align-items-start gap-3">
+                                    <div style="width:40px;height:40px;border-radius:10px;background:rgba(0,156,59,.1);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                                        <i class="fa fa-map-pin text-primary"></i>
+                                    </div>
+                                    <div>
+                                        <p class="text-muted small mb-1">Origen</p>
+                                        <p class="fw-semibold mb-0">{{ pedido.origen }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="d-flex align-items-start gap-3">
+                                    <div style="width:40px;height:40px;border-radius:10px;background:rgba(220,53,69,.1);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                                        <i class="fa fa-map-marker-alt text-danger"></i>
+                                    </div>
+                                    <div>
+                                        <p class="text-muted small mb-1">Destino</p>
+                                        <p class="fw-semibold mb-0">{{ pedido.destino }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="d-flex align-items-start gap-3">
+                                    <div style="width:40px;height:40px;border-radius:10px;background:rgba(0,156,59,.1);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                                        <i class="fa fa-shipping-fast text-primary"></i>
+                                    </div>
+                                    <div>
+                                        <p class="text-muted small mb-1">Tipo de servicio</p>
+                                        <p class="fw-semibold mb-0">{{ pedido.get_tipo_servicio_display }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="d-flex align-items-start gap-3">
+                                    <div style="width:40px;height:40px;border-radius:10px;background:rgba(0,156,59,.1);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                                        <i class="fa fa-weight-hanging text-primary"></i>
+                                    </div>
+                                    <div>
+                                        <p class="text-muted small mb-1">Peso del paquete</p>
+                                        <p class="fw-semibold mb-0">{{ pedido.peso_kg }} kg</p>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                        <div class="col-md-6">
-                            <p class="text-muted mb-1 small">Tipo de servicio</p>
-                            <p class="fw-semibold mb-0">{{ pedido.get_tipo_servicio_display }}</p>
+                        <div class="mt-4 d-flex gap-2 justify-content-end">
+                            <a href="{% url 'detalle_pedido' pedido.numero_tracking %}" class="btn btn-primary">
+                                <i class="fa fa-eye me-2"></i>Ver detalle completo
+                            </a>
                         </div>
-                        <div class="col-md-6">
-                            <p class="text-muted mb-1 small">Origen</p>
-                            <p class="fw-semibold mb-0"><i class="fa fa-map-marker-alt text-primary me-1"></i>{{ pedido.origen }}</p>
-                        </div>
-                        <div class="col-md-6">
-                            <p class="text-muted mb-1 small">Destino</p>
-                            <p class="fw-semibold mb-0"><i class="fa fa-map-marker-alt text-danger me-1"></i>{{ pedido.destino }}</p>
-                        </div>
-                        <div class="col-md-6">
-                            <p class="text-muted mb-1 small">Peso</p>
-                            <p class="fw-semibold mb-0">{{ pedido.peso_kg }} kg</p>
-                        </div>
-                        <div class="col-md-6">
-                            <p class="text-muted mb-1 small">Fecha de creación</p>
-                            <p class="fw-semibold mb-0">{{ pedido.fecha_creacion|date:"d/m/Y H:i" }}</p>
-                        </div>
-                        <div class="col-12">
-                            <p class="text-muted mb-1 small">Descripción de la carga</p>
-                            <p class="fw-semibold mb-0">{{ pedido.descripcion_carga }}</p>
-                        </div>
-                    </div>
-                    <div class="mt-4 text-end">
-                        <a href="{% url 'detalle_pedido' pedido.numero_tracking %}" class="btn btn-outline-primary">
-                            <i class="fa fa-eye me-2"></i>Ver detalle completo
-                        </a>
                     </div>
                 </div>
+
             </div>
             {% endif %}
 
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Validación formulario rastreo
+    document.getElementById('formRastreo').addEventListener('submit', function(e) {
+        const campo = document.querySelector('[name="numero_tracking"]');
+        if (!campo.value.trim()) {
+            campo.classList.add('is-invalid');
+            e.preventDefault();
+        }
+    });
+
+    // Limpiar error al escribir
+    const campo = document.querySelector('[name="numero_tracking"]');
+    if (campo) {
+        campo.addEventListener('input', function() {
+            this.classList.remove('is-invalid');
+            // Auto-formatear a mayúsculas
+            this.value = this.value.toUpperCase();
+        });
+    }
+});
+</script>
 {% endblock %}

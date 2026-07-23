@@ -3,35 +3,79 @@
 
 {% block contenido %}
 <div class="container py-5">
-    <div class="row justify-content-center">
+    <div class="row justify-content-center align-items-center" style="min-height:70vh;">
         <div class="col-lg-5 col-md-7">
-            <div class="text-center mb-4 wow fadeInUp" data-wow-delay="0.1s">
-                <h6 class="text-secondary text-uppercase">Acceso</h6>
-                <h1>Iniciar Sesión</h1>
+
+            <div class="text-center mb-5 wow fadeInDown" data-wow-delay="0.1s">
+                <div class="d-inline-flex align-items-center justify-content-center rounded-circle bg-primary mb-3"
+                     style="width:72px;height:72px;">
+                    <i class="fa fa-lock fa-2x text-white"></i>
+                </div>
+                <h6 class="text-secondary text-uppercase">Bienvenido</h6>
+                <h2 class="fw-bold">Iniciar Sesión</h2>
+                <p class="text-muted">Accede a tu panel de RutaExpres</p>
             </div>
-            <div class="card shadow border-0 wow fadeInUp" data-wow-delay="0.2s">
+
+            <div class="card border-0 shadow-lg wow fadeInUp" data-wow-delay="0.2s" style="border-radius:16px;">
                 <div class="card-body p-5">
                     <form method="post" action="{% url 'iniciar_sesion' %}" id="formLogin" novalidate>
                         {% csrf_token %}
+
+                        <!-- Usuario / Email -->
                         <div class="mb-4">
-                            <label class="form-label fw-semibold">Nombre de usuario o Correo</label>
-                            <input type="text" name="username" id="username" class="form-control" placeholder="Ej: cliente1">
-                            <div class="text-danger small mt-1" id="errorUsername"></div>
+                            <label class="form-label fw-semibold" for="username">
+                                <i class="fa fa-user text-primary me-2"></i>Correo o usuario
+                            </label>
+                            <input type="text" name="username" id="username"
+                                   class="form-control form-control-lg"
+                                   placeholder="ejemplo@correo.com"
+                                   autocomplete="username"
+                                   value="">
+                            <div class="invalid-feedback" id="errorUsername">El campo es obligatorio.</div>
                         </div>
+
+                        <!-- Contraseña -->
                         <div class="mb-4">
-                            <label class="form-label fw-semibold">Contraseña</label>
-                            <input type="password" name="password" id="password" class="form-control" placeholder="Contraseña">
+                            <label class="form-label fw-semibold" for="password">
+                                <i class="fa fa-lock text-primary me-2"></i>Contraseña
+                            </label>
+                            <div class="input-group">
+                                <input type="password" name="password" id="password"
+                                       class="form-control form-control-lg"
+                                       placeholder="Tu contraseña"
+                                       autocomplete="current-password">
+                                <button type="button" class="btn btn-outline-secondary" id="togglePassword" tabindex="-1">
+                                    <i class="fa fa-eye" id="eyeIcon"></i>
+                                </button>
+                            </div>
                             <div class="text-danger small mt-1" id="errorPassword"></div>
                         </div>
-                        <div class="d-grid">
-                            <button type="submit" class="btn btn-primary py-3">Entrar</button>
+
+                        <!-- Botón -->
+                        <div class="d-grid mb-4">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="fa fa-sign-in-alt me-2"></i>Ingresar
+                            </button>
+                        </div>
+
+                        <div class="text-center">
+                            <p class="text-muted mb-0">¿No tienes cuenta?
+                                <a href="{% url 'registrar_cliente' %}" class="text-primary fw-semibold">
+                                    Regístrate aquí
+                                </a>
+                            </p>
                         </div>
                     </form>
-                    <div class="text-center mt-4">
-                        <p class="mb-0">¿No tienes cuenta? <a href="{% url 'registrar_cliente' %}" class="text-primary fw-semibold">Regístrate aquí</a></p>
-                    </div>
                 </div>
             </div>
+
+            <!-- Acceso rápido sin cuenta -->
+            <div class="text-center mt-4 wow fadeInUp" data-wow-delay="0.3s">
+                <a href="{% url 'rastrear_pedido' %}" class="text-muted text-decoration-none">
+                    <i class="fa fa-search me-1"></i>Rastrear pedido sin iniciar sesión
+                </a>
+            </div>
+
         </div>
     </div>
 </div>
@@ -39,32 +83,62 @@
 
 {% block extra_js %}
 <script>
+document.addEventListener('DOMContentLoaded', function() {
+
+    // Toggle mostrar/ocultar contraseña
+    document.getElementById('togglePassword').addEventListener('click', function() {
+        const input = document.getElementById('password');
+        const icon  = document.getElementById('eyeIcon');
+        if (input.type === 'password') {
+            input.type = 'text';
+            icon.classList.replace('fa-eye', 'fa-eye-slash');
+        } else {
+            input.type = 'password';
+            icon.classList.replace('fa-eye-slash', 'fa-eye');
+        }
+    });
+
+    // Validación al enviar
     document.getElementById('formLogin').addEventListener('submit', function(e) {
         let valido = true;
 
-        const username = document.getElementById('username').value.trim();
-        const errorUsername = document.getElementById('errorUsername');
-        if (!username) {
-            errorUsername.textContent = 'El usuario o correo es obligatorio.';
-            document.getElementById('username').classList.add('is-invalid');
+        const username  = document.getElementById('username');
+        const errUser   = document.getElementById('errorUsername');
+        const password  = document.getElementById('password');
+        const errPass   = document.getElementById('errorPassword');
+
+        // Limpiar
+        username.classList.remove('is-invalid');
+        password.classList.remove('is-invalid');
+        errUser.textContent = '';
+        errPass.textContent = '';
+
+        if (!username.value.trim()) {
+            username.classList.add('is-invalid');
+            errUser.style.display = 'block';
+            errUser.textContent = 'Ingresa tu usuario o correo electrónico.';
             valido = false;
-        } else {
-            errorUsername.textContent = '';
-            document.getElementById('username').classList.remove('is-invalid');
         }
 
-        const password = document.getElementById('password').value;
-        const errorPassword = document.getElementById('errorPassword');
-        if (!password) {
-            errorPassword.textContent = 'La contraseña es obligatoria.';
-            document.getElementById('password').classList.add('is-invalid');
+        if (!password.value) {
+            password.classList.add('is-invalid');
+            errPass.textContent = 'Ingresa tu contraseña.';
+            errPass.style.display = 'block';
             valido = false;
-        } else {
-            errorPassword.textContent = '';
-            document.getElementById('password').classList.remove('is-invalid');
         }
 
         if (!valido) e.preventDefault();
     });
+
+    // Limpiar errores en tiempo real
+    document.getElementById('username').addEventListener('input', function() {
+        this.classList.remove('is-invalid');
+        document.getElementById('errorUsername').textContent = '';
+    });
+    document.getElementById('password').addEventListener('input', function() {
+        this.classList.remove('is-invalid');
+        document.getElementById('errorPassword').textContent = '';
+    });
+});
 </script>
 {% endblock %}
