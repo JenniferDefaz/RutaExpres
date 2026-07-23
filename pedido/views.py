@@ -171,6 +171,7 @@ def _generar_factura_pdf(pedido):
     doc.build(story)
     buffer.seek(0)
     return buffer.getvalue()
+    
 
 def _enviar_confirmacion_pedido(pedido):
     """Correo #2 — Confirmación de pedido con QR de tracking (HTML)."""
@@ -583,53 +584,18 @@ def qr_pedido(request, tracking):
 
 @login_required(login_url='iniciar_sesion')
 def descargar_orden_pdf(request, tracking):
-    """Descarga la orden de envío como archivo de texto."""
+    """Descarga la factura del pedido como PDF real."""
     pedido = get_object_or_404(Pedido.objects.select_related('cliente'), numero_tracking=tracking)
     if not (request.user.groups.filter(name__in=['Secretario', 'Despachador']).exists()
             or request.user.is_staff):
         if hasattr(request.user, 'cliente') and pedido.cliente != request.user.cliente:
             messages.error(request, 'No tienes permiso para descargar esta orden.')
             return redirect('panel_cliente')
-    precio = f'${pedido.precio_envio}' if pedido.precio_envio else 'Por calcular'
-    metodo = pedido.get_metodo_pago_display() if pedido.metodo_pago else 'No especificado'
-    despachador_nombre = (
-        pedido.despachador.get_full_name() or pedido.despachador.username
-        if pedido.despachador else 'Sin asignar'
-    )
-    contenido = (
-        '╔══════════════════════════════════════════════╗\n'
-        '║      RUTAEXPRES - ORDEN DE ENVÍO             ║\n'
-        '║      Centro de Soluciones Logísticas         ║\n'
-        '╚══════════════════════════════════════════════╝\n\n'
-        f'Número de Tracking : {pedido.numero_tracking}\n'
-        f'Estado             : {pedido.get_estado_display()}\n'
-        f'Fecha de creación  : {pedido.fecha_creacion.strftime("%d/%m/%Y %H:%M")}\n\n'
-        '── CLIENTE ──────────────────────────────────────\n'
-        f'Nombre    : {pedido.cliente.nombre} {pedido.cliente.apellido}\n'
-        f'Email     : {pedido.cliente.email}\n'
-        f'Teléfono  : {pedido.cliente.telefono}\n'
-        f'Dirección : {pedido.cliente.direccion}\n\n'
-        '── ENVÍO ────────────────────────────────────────\n'
-        f'Destinatario    : {pedido.destinatario}\n'
-        f'Tipo de servicio: {pedido.get_tipo_servicio_display()}\n'
-        f'Origen          : {pedido.origen}\n'
-        f'Destino         : {pedido.destino}\n'
-        f'Peso            : {pedido.peso_kg} kg\n'
-        f'Precio estimado : {precio}\n'
-        f'Descripción     : {pedido.descripcion_carga}\n\n'
-        '── PAGO ─────────────────────────────────────────\n'
-        f'Método de pago  : {metodo}\n'
-        f'Pago confirmado : {"SÍ" if pedido.pago_confirmado else "NO"}\n\n'
-        '── ASIGNACIÓN ───────────────────────────────────\n'
-        f'Despachador     : {despachador_nombre}\n\n'
-        '────────────────────────────────────────────────\n'
-        'Tel: +593 2 345 6789 | info@rutaexpres.com.ec\n'
-        '────────────────────────────────────────────────\n'
-    )
-    response = HttpResponse(contenido, content_type='text/plain; charset=utf-8')
-    response['Content-Disposition'] = f'attachment; filename="Orden_{tracking}.txt"'
-    return response
 
+    pdf_bytes = _generar_factura_pdf(pedido)
+    response = HttpResponse(pdf_bytes, content_type='application/pdf')
+    response['Content-Disposition'] = f'attachment; filename="Factura_{tracking}.pdf"'
+    return response
 
 @login_required(login_url='iniciar_sesion')
 def asignar_despachador(request, tracking):
